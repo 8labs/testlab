@@ -1,0 +1,161 @@
+{
+  "name": "Demo Scenario",
+  "endpoint": "https://files.8labs.com/test.php?static_param=staticvalue&dynamic_param={{dynamicValue}}",
+  "method": "POST",
+  "testTable": {
+    "inputColumns": [
+      {
+        "key": "dynamic_query_value",
+        "label": "Dynamic Query Value",
+        "expression": "dynamicValue",
+        "editVisible": false
+      },
+      {
+        "label": "Multiplier",
+        "expression": "$.math_variables.multiplier",
+        "editVisible": false,
+        "key": "multiplier"
+      },
+      {
+        "label": "Name",
+        "expression": "$.name",
+        "editVisible": false,
+        "key": "name"
+      },
+      {
+        "label": "Age",
+        "expression": "$.age",
+        "editVisible": false,
+        "key": "age"
+      }
+    ],
+    "resultColumns": [
+      {
+        "key": "multiplied",
+        "label": "Multiplied",
+        "expression": "$.math.multiplied",
+        "editVisible": false
+      },
+      {
+        "label": "Name",
+        "expression": "$.person.name",
+        "editVisible": false,
+        "key": "name"
+      },
+      {
+        "label": "Status Code",
+        "expression": "{{http_status}}",
+        "editVisible": false,
+        "key": "status_code"
+      }
+    ],
+    "rows": [
+      {
+        "inputItems": [
+          {
+            "value": "value1"
+          },
+          {
+            "value": "10"
+          },
+          {
+            "value": "John"
+          },
+          {
+            "value": "30"
+          }
+        ],
+        "resultItems": [
+          {
+            "value": "100",
+            "operator": "="
+          },
+          {
+            "value": "John",
+            "operator": "="
+          },
+          {
+            "value": "200",
+            "operator": "="
+          }
+        ]
+      },
+      {
+        "inputItems": [
+          {
+            "value": "value2"
+          },
+          {
+            "value": "20"
+          },
+          {
+            "value": "John"
+          },
+          {
+            "value": "30"
+          }
+        ],
+        "resultItems": [
+          {
+            "value": "200",
+            "operator": "="
+          },
+          {
+            "value": "John",
+            "operator": "="
+          },
+          {
+            "value": "404",
+            "operator": "!="
+          }
+        ]
+      },
+      {
+        "inputItems": [
+          {
+            "value": "value3"
+          },
+          {
+            "value": "-20"
+          },
+          {
+            "value": "John"
+          },
+          {
+            "value": "30"
+          }
+        ],
+        "resultItems": [
+          {
+            "value": "0",
+            "operator": "<"
+          },
+          {
+            "value": "John",
+            "operator": "="
+          },
+          {
+            "value": "200",
+            "operator": "="
+          }
+        ]
+      }
+    ],
+    "authentication": {
+      "type": "Basic",
+      "username": "AUsername",
+      "password": "aPassword!"
+    },
+    "headers": [
+      {
+        "key": "static_header",
+        "value": "static_value1"
+      },
+      {
+        "key": "dynamic_header",
+        "value": "{{dynamicValue}}"
+      }
+    ]
+  },
+  "id": "9b0c23eb-33ff-4e50-9f3e-59c65eee580a"
+}
