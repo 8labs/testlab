@@ -1,0 +1,24 @@
+@import './base.css';
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+.note {
+  font-size: 0.8rem;
+  position: absolute;
+  right: calc(10% + 2rem);
+  margin-top: 1rem;
+}
+
+.note a {
+  color: #00bfd3;
+  text-decoration: none;
+}
+.note img {
+  height: 0.8rem;
+}

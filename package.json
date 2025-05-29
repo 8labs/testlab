@@ -1,0 +1,67 @@
+{
+  "name": "8labs",
+  "version": "0.0.2",
+  "description": "8labs is a really simple api testing platform that allows you to build and run tests against your api endpoints as easily as editing a spreadsheet.",
+  "author": "8labs",
+  "license": "Proprietary",
+  "homepage": "https://8labs.com",
+  "scripts": {
+    "format": "prettier --write .",
+    "lint": "eslint --cache .",
+    "start": "electron-vite preview",
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "postinstall": "electron-builder install-app-deps",
+    "build:unpack": "npm run build && electron-builder --dir",
+    "build:win": "npm run build && electron-builder --win",
+    "build:mac": "npm run build && electron-builder --mac",
+    "build:linux": "npm run build && electron-builder --linux"
+  },
+  "dependencies": {
+    "@electron-toolkit/preload": "^3.0.1",
+    "@electron-toolkit/utils": "^4.0.0",
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "@electron-fonts/inter": "^1.2.0",
+    "@electron-toolkit/eslint-config": "^2.0.0",
+    "@electron-toolkit/eslint-config-prettier": "^3.0.0",
+    "@vitejs/plugin-vue": "^5.2.3",
+    "axios": "^1.7.3",
+    "electron": "^35.1.5",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^3.1.0",
+    "eslint": "^9.24.0",
+    "eslint-plugin-vue": "^10.0.0",
+    "esm": "^3.2.25",
+    "logrocket": "^8.1.2",
+    "moment": "^2.30.1",
+    "pinia": "^2.1.7",
+    "prettier": "^3.5.3",
+    "vite": "^6.2.6",
+    "vue": "^3.5.13",
+    "vue-eslint-parser": "^10.1.3",
+    "vue-json-pretty": "^2.4.0",
+    "vue-router": "^4.3.3"
+  },
+  "main": "./out/main/index.js",
+  "build": {
+    "appId": "com.8labs.testlab",
+    "productName": "8labs",
+    "icon": "resources/icon",
+    "files": [],
+    "directories": {
+      "buildResources": "resources",
+      "output": "dist"
+    },
+    "mac": {
+      "category": "public.app-category.developer-tools"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}
