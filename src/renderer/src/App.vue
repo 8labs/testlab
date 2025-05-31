@@ -28,17 +28,31 @@ const namechanged = () => {
   fetchTestScenarioTables()
 }
 
+const testHistorySaved = () => {
+  fetchTestScenarioTables()
+}
+
+onMounted(() => {
+  window.eightlabs.onTestDeleted((event, id) => {
+    testScenarioTables.value = testScenarioTables.value.filter(
+      (t) => t.id !== id
+    )
+  })
+})
 </script>
 
 <template>
   <div class="app">
     <div class="window-controls">
-      <img class="logo" src="./assets/img/8labs.svg" />
+      <img class="logo" src="./assets/img/8labs-testlabs.svg" />
     </div>
     <div class="container">
       <ToolBarDetail :testScenarioTables="testScenarioTables" />
       <div class="panel">
-        <RouterView @namechanged="namechanged" />
+        <RouterView
+          @namechanged="namechanged"
+          @testHistorySaved="testHistorySaved"
+        />
       </div>
     </div>
   </div>
@@ -75,7 +89,7 @@ const namechanged = () => {
 .window-controls .logo {
   height: 1rem;
   position: absolute;
-  right: 1rem;
+  right: 0.75rem;
   top: 0.5rem;
 }
 </style>

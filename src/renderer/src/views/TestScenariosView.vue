@@ -347,6 +347,10 @@ import { ref, onMounted, watch, toRaw } from "vue";
 import axios from "axios";
 import { useRoute, useRouter } from "vue-router";
 import { executeTest, executeAllTests } from "../services/testExecutor";
+import {
+  saveTestHistory,
+  getTestHistory,
+} from "../services/testHistoryService";
 
 import {
   getAllTestScenarios,
@@ -369,10 +373,16 @@ const tabView = ref("table");
 const selectedTest = ref(null);
 const showPassword = ref(false);
 
-const emit = defineEmits(["namechanged", "scenarioresults"]);
+const emit = defineEmits([
+  "namechanged",
+  "scenarioresults",
+  "testHistorySaved",
+]);
 
 const route = useRoute();
 const router = useRouter();
+
+const testHistory = ref([]);
 
 const closeTestDetail = () => {
   selectedTest.value = null;
@@ -573,25 +583,33 @@ const execute = () => {
   runtests();
 };
 
-const runtests = () => {
+const runtests = async () => {
   tabView.value = "table";
   testsRunning.value = true;
   testResults.value = [];
 
+  const results = [];
   for (let row of scenarioTable.value.testTable.rows) {
-    executeSingleTest(row, scenarioTable.value.testTable.rows.indexOf(row));
+    const result = await executeSingleTest(
+      row,
+      scenarioTable.value.testTable.rows.indexOf(row)
+    );
+    results.push(result);
   }
 
-  // executeAllTests(toRaw(scenarioTable.value))
-  //   .then((results) => {
-  //     testResults.value = results
-  //     emit('scenarioresults', results)
-  //     testsRunning.value = false
-  //   })
-  //   .catch((error) => {
-  //     console.error('Error executing tests:', error)
-  //     testsRunning.value = false
-  //   })
+  try {
+    await saveTestHistory({
+      id: scenarioTable.value.id,
+      date: new Date().toISOString(),
+      failureCount: results.filter((result) => !result.match).length,
+      results: results,
+    });
+    emit("testHistorySaved");
+  } catch (error) {
+    console.error("Error saving test history:", error);
+  }
+
+  testsRunning.value = false;
 };
 
 const executeSingleTest = async (row, rowIndex) => {
@@ -602,6 +620,8 @@ const executeSingleTest = async (row, rowIndex) => {
     const result = await executeTest(toRaw(scenarioTable.value), toRaw(row));
     testResults.value[rowIndex] = result;
     testsRunning.value = false;
+
+    return result;
 
     // If the test failed, show the test detail
     // if (!result.match) {
@@ -678,15 +698,27 @@ const loadTestScenario = async () => {
   }
 };
 
+const loadTestHistory = async () => {
+  if (tableId.value && tableId.value !== "new") {
+    try {
+      testHistory.value = await getTestHistory(tableId.value);
+    } catch (error) {
+      console.error("Error loading test history:", error);
+    }
+  }
+};
+
 watch(
   () => route.params.id,
   async (newId) => {
-    loadTestScenario();
+    await loadTestScenario();
+    await loadTestHistory();
   }
 );
 
 onMounted(async () => {
-  loadTestScenario();
+  await loadTestScenario();
+  await loadTestHistory();
 });
 </script>
 
@@ -891,7 +923,6 @@ td:hover .delete-row {
 .decisionable-table thead {
 }
 .decisionable-table tbody {
-  border-radius: 0 0 0.5rem 0.5rem;
   color: #001d27;
 }
 
@@ -930,13 +961,10 @@ input[type="text"]::placeholder {
 }
 
 .decisionable-table thead th:first-child {
-  border-radius: 0.5rem 0 0 0;
 }
 
 .decisionable-table thead th:last-child {
   border-right: none;
-
-  border-radius: 0 0.5rem 0 0;
 }
 
 .decisionable-table td {
@@ -945,7 +973,6 @@ input[type="text"]::placeholder {
 
 .decisionable-table tbody {
   background-color: white;
-  border-radius: 0.5rem;
 }
 
 .decisionable-table tbody input[type="text"] {
@@ -955,7 +982,6 @@ input[type="text"]::placeholder {
 .decisionable-table tfoot {
   color: #001d27;
   background-color: white;
-  border-radius: 0.5rem;
 }
 
 .decisionable-table td {
@@ -1019,20 +1045,6 @@ input[type="text"]::placeholder {
 
 .decisionable-table tr .condition:not(:has(~ .condition)) {
   border-right: 3px double #00bfd3;
-}
-
-.decisionable-table tbody:not(:has(~ tfoot)) tr:last-child td:last-child {
-  border-bottom-right-radius: 0.5rem;
-}
-.decisionable-table tbody:not(:has(~ tfoot)) tr:last-child td:first-child {
-  border-bottom-left-radius: 0.5rem;
-}
-
-.decisionable-table tfoot tr:last-child td:last-child {
-  border-bottom-right-radius: 0.5rem;
-}
-.decisionable-table tfoot tr:last-child td:first-child {
-  border-bottom-left-radius: 0.5rem;
 }
 
 .decisionable-table tfoot td {

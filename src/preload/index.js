@@ -25,6 +25,14 @@ if (process.contextIsolated) {
         deleteTestScenario: (id) => ipcRenderer.invoke('delete-test-scenario', id),
         updateTestScenarioMetadata: (id, metadata) =>
           ipcRenderer.invoke('update-test-scenario-metadata', id, metadata),
+        loadScenarioListContextMenu: (id) => ipcRenderer.invoke('load-scenario-list-context-menu', id),
+        onTestDeleted: (callback) => ipcRenderer.on('test-deleted', callback),
+
+        // Test history operations
+        saveTestHistory: (historyEntry) => ipcRenderer.invoke('save-test-history', historyEntry),
+        getTestHistory: (scenarioId) => ipcRenderer.invoke('get-test-history', scenarioId),
+        getAllTestHistory: () => ipcRenderer.invoke('get-all-test-history'),
+        getFailureCount: (scenarioId) => ipcRenderer.invoke('get-failure-count', scenarioId),
       }
     );
   } catch (error) {
