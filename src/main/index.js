@@ -1,13 +1,15 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Menu } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.icns?asset'
 
 import TestExecutor from './testExecutor.mjs';
 import DataService from './dataService.mjs';
+import TestHistoryService from './testHistoryService.mjs';
 
 const testExecutor = new TestExecutor();
 const dataService = new DataService();
+const testHistoryService = new TestHistoryService();
 
 function createWindow() {
   // Create the browser window.
@@ -33,6 +35,19 @@ function createWindow() {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+    ipcMain.handle('load-scenario-list-context-menu', async (event, id) => {
+      const menuTemplate = [
+        {
+          label: 'Delete Test',
+          click: () => {
+            dataService.deleteTestScenario(id);
+            mainWindow.webContents.send('test-deleted', id)
+          }
+        }
+      ];
+      const contextMenu = Menu.buildFromTemplate(menuTemplate); // 3
+      contextMenu.popup({ window: mainWindow.webContents });    // 4
+    });
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -57,6 +72,7 @@ app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.electron')
 
   dataService.initialize();
+  testHistoryService.initialize();
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -86,6 +102,23 @@ app.whenReady().then(() => {
     return await dataService.updateTestScenarioMetadata(id, metadata);
   });
 
+  // Test history IPC handlers
+  ipcMain.handle('save-test-history', async (event, historyEntry) => {
+    return await testHistoryService.saveTestHistory(historyEntry);
+  });
+
+  ipcMain.handle('get-test-history', async (event, scenarioId) => {
+    return await testHistoryService.getTestHistory(scenarioId);
+  });
+
+  ipcMain.handle('get-all-test-history', async () => {
+    return await testHistoryService.getAllTestHistory();
+  });
+
+  ipcMain.handle('get-failure-count', async (event, scenarioId) => {
+    return await testHistoryService.getFailureCount(scenarioId);
+  });
+
   ipcMain.handle('execute-test', async (event, scenario, row) => {
     return await testExecutor.executeTest(scenario, row);
   });
@@ -96,12 +129,14 @@ app.whenReady().then(() => {
 
   createWindow()
 
+
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
+
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits

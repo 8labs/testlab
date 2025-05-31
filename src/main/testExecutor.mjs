@@ -1,4 +1,5 @@
 import axios from 'axios';
+import TestHistoryService from './testHistoryService.mjs';
 
 class TestExecutor {
     constructor() {
@@ -7,6 +8,7 @@ class TestExecutor {
                 return true; // Accept all status codes
             }
         });
+        this.testHistoryService = new TestHistoryService();
     }
 
     async executeTest(scenario, row) {
@@ -209,6 +211,16 @@ class TestExecutor {
             case 'notcontain': return !actual.includes(expected);
             default: return actual === expected;
         }
+    }
+
+    async executeAllTests(scenario) {
+        const results = [];
+        for (const row of scenario.testTable.rows) {
+            const result = await this.executeTest(scenario, row);
+            results.push(result);
+        }
+
+        return results;
     }
 }
 
