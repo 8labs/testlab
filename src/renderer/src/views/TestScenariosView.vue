@@ -292,7 +292,10 @@
                 style="cursor: pointer"
               />
             </td>
-            <td style="width: 3.75rem">
+            <td
+              style="width: 3.75rem"
+              :class="{ 'historical-test': !lastRunThisSession }"
+            >
               <div></div>
               <img
                 src="../assets/img/checkmark-transparent.svg"
@@ -333,9 +336,34 @@
           </tr>
           <tr class="lastrow" @click="addRow()">
             <td>+</td>
+
+            <td
+              class="failure-count"
+              v-if="!testsRunning && !!testHistory"
+              :colspan="
+                scenarioTable.testTable.inputColumns.length +
+                scenarioTable.testTable.resultColumns.length +
+                2
+              "
+            >
+              <img
+                src="../assets/img/exclamation.svg"
+                v-if="!!testHistory && testHistory.failureCount > 0"
+              />{{ testResults.length - testHistory.failureCount }} of
+              {{ testResults.length }} passing
+            </td>
           </tr>
         </tbody>
       </table>
+      <p class="last-run">
+        <img src="../assets/img/exclamation.svg" v-if="!lastRunThisSession" />
+        Last run
+        {{
+          !!lastRunThisSession
+            ? formatDate(lastRunThisSession)
+            : formatDate(testHistory.date)
+        }}
+      </p>
     </div>
   </div>
 </template>
@@ -343,7 +371,7 @@
 <script setup>
 import TestDetail from "../components/TestDetail.vue";
 
-import { ref, onMounted, watch, toRaw } from "vue";
+import { ref, onMounted, watch, toRaw, computed } from "vue";
 import axios from "axios";
 import { useRoute, useRouter } from "vue-router";
 import { executeTest, executeAllTests } from "../services/testExecutor";
@@ -373,6 +401,8 @@ const tabView = ref("table");
 const selectedTest = ref(null);
 const showPassword = ref(false);
 
+const lastRunThisSession = ref(null);
+
 const emit = defineEmits([
   "namechanged",
   "scenarioresults",
@@ -383,6 +413,12 @@ const route = useRoute();
 const router = useRouter();
 
 const testHistory = ref([]);
+
+const formatDate = (dateToFormat) => {
+  if (!dateToFormat) return "";
+  const dateObj = new Date(dateToFormat);
+  return dateObj.toLocaleDateString() + " " + dateObj.toLocaleTimeString();
+};
 
 const closeTestDetail = () => {
   selectedTest.value = null;
@@ -604,6 +640,8 @@ const runtests = async () => {
       failureCount: results.filter((result) => !result.match).length,
       results: results,
     });
+    loadTestHistory();
+    lastRunThisSession.value = new Date();
     emit("testHistorySaved");
   } catch (error) {
     console.error("Error saving test history:", error);
@@ -699,9 +737,18 @@ const loadTestScenario = async () => {
 };
 
 const loadTestHistory = async () => {
+  testHistory.value = {};
+  testResults.value = [];
+
   if (tableId.value && tableId.value !== "new") {
     try {
-      testHistory.value = await getTestHistory(tableId.value);
+      const testHistories = await getTestHistory(tableId.value);
+      if (testHistories && testHistories.length > 0) {
+        testHistory.value = testHistories[0];
+        testResults.value = testHistory.value.results;
+      } else {
+        testHistory.value = {};
+      }
     } catch (error) {
       console.error("Error loading test history:", error);
     }
@@ -711,6 +758,8 @@ const loadTestHistory = async () => {
 watch(
   () => route.params.id,
   async (newId) => {
+    lastRunThisSession.value = false;
+    tableId.value = newId;
     await loadTestScenario();
     await loadTestHistory();
   }
@@ -826,6 +875,7 @@ thead td > div.header {
   background: #001d27;
   color: #ffffff;
   cursor: pointer;
+  border: none;
 }
 
 td.index-cell {
@@ -1033,6 +1083,13 @@ input[type="text"]::placeholder {
   outline: none;
 }
 
+.decisionable-table td.failure-count {
+  text-align: right;
+}
+.decisionable-table td.failure-count img {
+  margin-right: 0.75rem;
+}
+
 .decisionable-table td.result {
 }
 
@@ -1044,6 +1101,10 @@ input[type="text"]::placeholder {
 }
 
 .decisionable-table tr .condition:not(:has(~ .condition)) {
+  border-right: 3px double #00bfd3;
+}
+
+.decisionable-table tr .result:not(:has(~ .result)) {
   border-right: 3px double #00bfd3;
 }
 
@@ -1220,5 +1281,13 @@ input[type="text"]::placeholder {
 
 .password-toggle:hover img {
   opacity: 1;
+}
+
+.last-run {
+  margin: 1rem 1rem;
+}
+
+td.historical-test img {
+  opacity: 0.25;
 }
 </style>
