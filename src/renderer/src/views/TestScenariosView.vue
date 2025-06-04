@@ -1378,7 +1378,10 @@ input[type="text"]::placeholder {
 }
 
 .decisionable-table td:nth-last-child(2) {
-  padding: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+.decisionable-table td:last-child {
+  padding: 0.5rem 1rem;
 }
 .decisionable-table td:first-child {
   padding: 0.5rem;
