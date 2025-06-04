@@ -253,6 +253,10 @@
               v-for="(inputItem, inputItemIndex) in row.inputItems"
               class="condition"
               v-bind:key="inputItem.id || inputItemIndex"
+              :class="{
+                selected: isCellSelected(rowIndex, inputItemIndex, true),
+              }"
+              @click="(e) => handleCellClick(e, rowIndex, inputItemIndex, true)"
             >
               <input
                 @change="saveAll()"
@@ -260,12 +264,19 @@
                 type="text"
                 v-model="inputItem.value"
                 placeholder="Input Value"
+                @paste.prevent
               />
             </td>
             <td
               v-for="(outputItem, outputItemIndex) in row.resultItems"
               v-bind:key="outputItem.id || outputItemIndex"
               class="result"
+              :class="{
+                selected: isCellSelected(rowIndex, outputItemIndex, false),
+              }"
+              @click="
+                (e) => handleCellClick(e, rowIndex, outputItemIndex, false)
+              "
             >
               <div>
                 <select v-model="outputItem.operator" @change="saveAll()">
@@ -281,6 +292,7 @@
                   type="text"
                   v-model="outputItem.value"
                   placeholder="Expected Value"
+                  @paste.prevent
                 />
               </div>
             </td>
@@ -292,7 +304,10 @@
                 style="cursor: pointer"
               />
             </td>
-            <td style="width: 3.75rem">
+            <td
+              style="width: 3.75rem"
+              :class="{ 'historical-test': !lastRunThisSession }"
+            >
               <div></div>
               <img
                 src="../assets/img/checkmark-transparent.svg"
@@ -333,9 +348,34 @@
           </tr>
           <tr class="lastrow" @click="addRow()">
             <td>+</td>
+
+            <td
+              class="failure-count"
+              v-if="!testsRunning && !!testHistory"
+              :colspan="
+                scenarioTable.testTable.inputColumns.length +
+                scenarioTable.testTable.resultColumns.length +
+                2
+              "
+            >
+              <img
+                src="../assets/img/exclamation.svg"
+                v-if="!!testHistory && testHistory.failureCount > 0"
+              />{{ testResults.length - testHistory.failureCount }} of
+              {{ testResults.length }} passing
+            </td>
           </tr>
         </tbody>
       </table>
+      <p class="last-run">
+        <img src="../assets/img/exclamation.svg" v-if="!lastRunThisSession" />
+        Last run
+        {{
+          !!lastRunThisSession
+            ? formatDate(lastRunThisSession)
+            : formatDate(testHistory.date)
+        }}
+      </p>
     </div>
   </div>
 </template>
@@ -343,7 +383,7 @@
 <script setup>
 import TestDetail from "../components/TestDetail.vue";
 
-import { ref, onMounted, watch, toRaw } from "vue";
+import { ref, onMounted, watch, toRaw, computed, onUnmounted } from "vue";
 import axios from "axios";
 import { useRoute, useRouter } from "vue-router";
 import { executeTest, executeAllTests } from "../services/testExecutor";
@@ -373,6 +413,8 @@ const tabView = ref("table");
 const selectedTest = ref(null);
 const showPassword = ref(false);
 
+const lastRunThisSession = ref(null);
+
 const emit = defineEmits([
   "namechanged",
   "scenarioresults",
@@ -383,6 +425,19 @@ const route = useRoute();
 const router = useRouter();
 
 const testHistory = ref([]);
+
+const selectedCells = ref([]);
+const lastSelectedCell = ref(null);
+const clipboard = ref({
+  values: [],
+  isMultiCell: false,
+});
+
+const formatDate = (dateToFormat) => {
+  if (!dateToFormat) return "";
+  const dateObj = new Date(dateToFormat);
+  return dateObj.toISOString().split("T")[0];
+};
 
 const closeTestDetail = () => {
   selectedTest.value = null;
@@ -604,6 +659,8 @@ const runtests = async () => {
       failureCount: results.filter((result) => !result.match).length,
       results: results,
     });
+    loadTestHistory();
+    lastRunThisSession.value = new Date();
     emit("testHistorySaved");
   } catch (error) {
     console.error("Error saving test history:", error);
@@ -699,9 +756,18 @@ const loadTestScenario = async () => {
 };
 
 const loadTestHistory = async () => {
+  testHistory.value = {};
+  testResults.value = [];
+
   if (tableId.value && tableId.value !== "new") {
     try {
-      testHistory.value = await getTestHistory(tableId.value);
+      const testHistories = await getTestHistory(tableId.value);
+      if (testHistories && testHistories.length > 0) {
+        testHistory.value = testHistories[0];
+        testResults.value = testHistory.value.results;
+      } else {
+        testHistory.value = {};
+      }
     } catch (error) {
       console.error("Error loading test history:", error);
     }
@@ -711,14 +777,254 @@ const loadTestHistory = async () => {
 watch(
   () => route.params.id,
   async (newId) => {
+    lastRunThisSession.value = false;
+    tableId.value = newId;
     await loadTestScenario();
     await loadTestHistory();
   }
 );
 
+const handleCellClick = (event, rowIndex, colIndex, isInput = true) => {
+  const cellKey = `${rowIndex}-${colIndex}-${isInput ? "input" : "result"}`;
+
+  if (event.ctrlKey || event.metaKey) {
+    // Ctrl/Cmd + Click: Toggle individual cell
+    const index = selectedCells.value.indexOf(cellKey);
+    if (index === -1) {
+      selectedCells.value.push(cellKey);
+    } else {
+      selectedCells.value.splice(index, 1);
+    }
+  } else if (event.shiftKey && lastSelectedCell.value) {
+    // Shift + Click: Select range
+    const [lastRow, lastCol, lastType] = lastSelectedCell.value.split("-");
+    const lastRowNum = parseInt(lastRow);
+    const lastColNum = parseInt(lastCol);
+
+    const startRow = Math.min(lastRowNum, rowIndex);
+    const endRow = Math.max(lastRowNum, rowIndex);
+    const startCol = Math.min(lastColNum, colIndex);
+    const endCol = Math.max(lastColNum, colIndex);
+
+    selectedCells.value = [];
+
+    // If same column, only select that column
+    if (
+      lastColNum === colIndex &&
+      lastType === (isInput ? "input" : "result")
+    ) {
+      for (let r = startRow; r <= endRow; r++) {
+        selectedCells.value.push(
+          `${r}-${colIndex}-${isInput ? "input" : "result"}`
+        );
+      }
+    } else {
+      // Otherwise select rectangular area
+      for (let r = startRow; r <= endRow; r++) {
+        // Add input columns
+        for (let c = startCol; c <= endCol; c++) {
+          if (c < scenarioTable.value.testTable.inputColumns.length) {
+            selectedCells.value.push(`${r}-${c}-input`);
+          }
+        }
+        // Add result columns
+        for (let c = startCol; c <= endCol; c++) {
+          if (c < scenarioTable.value.testTable.resultColumns.length) {
+            selectedCells.value.push(`${r}-${c}-result`);
+          }
+        }
+      }
+    }
+  } else {
+    // Regular click: Select single cell
+    selectedCells.value = [cellKey];
+  }
+
+  lastSelectedCell.value = cellKey;
+};
+
+const getCellValue = (rowIndex, colIndex, isInput) => {
+  const row = scenarioTable.value.testTable.rows[rowIndex];
+  if (!row) return "";
+
+  if (isInput) {
+    return row.inputItems[colIndex]?.value || "";
+  } else {
+    const item = row.resultItems[colIndex];
+    return item ? `${item.operator}${item.value}` : "";
+  }
+};
+
+const setCellValue = (rowIndex, colIndex, value, isInput) => {
+  const row = scenarioTable.value.testTable.rows[rowIndex];
+  if (!row) return;
+
+  if (isInput) {
+    if (!row.inputItems[colIndex]) {
+      row.inputItems[colIndex] = { value: "" };
+    }
+    row.inputItems[colIndex].value = value;
+  } else {
+    if (!row.resultItems[colIndex]) {
+      row.resultItems[colIndex] = { value: "", operator: "=" };
+    }
+    // Parse operator and value from the pasted string
+    const match = value.match(/^([=!<>]+)(.*)$/);
+    if (match) {
+      row.resultItems[colIndex].operator = match[1];
+      row.resultItems[colIndex].value = match[2];
+    } else {
+      row.resultItems[colIndex].value = value;
+    }
+  }
+  saveAll();
+};
+
+const handleCopy = (event) => {
+  if (selectedCells.value.length === 0) return;
+
+  // Sort selected cells by row and column to maintain order
+  const sortedCells = [...selectedCells.value].sort((a, b) => {
+    const [rowA, colA, typeA] = a.split("-");
+    const [rowB, colB, typeB] = b.split("-");
+    if (rowA !== rowB) return parseInt(rowA) - parseInt(rowB);
+    // If same row, sort by type first (input before result), then by column
+    if (typeA !== typeB) return typeA === "input" ? -1 : 1;
+    return parseInt(colA) - parseInt(colB);
+  });
+
+  const values = sortedCells.map((cellKey) => {
+    const [row, col, type] = cellKey.split("-");
+    return getCellValue(parseInt(row), parseInt(col), type === "input");
+  });
+
+  // Calculate the dimensions of the copied area
+  const firstCell = sortedCells[0].split("-");
+  const lastCell = sortedCells[sortedCells.length - 1].split("-");
+
+  // Calculate total columns by considering both input and result columns
+  const inputCols = scenarioTable.value.testTable.inputColumns.length;
+  const resultCols = scenarioTable.value.testTable.resultColumns.length;
+
+  // Convert column indices to absolute positions
+  const getAbsoluteCol = (col, type) => {
+    return type === "input" ? parseInt(col) : parseInt(col) + inputCols;
+  };
+
+  const firstCol = getAbsoluteCol(firstCell[1], firstCell[2]);
+  const lastCol = getAbsoluteCol(lastCell[1], lastCell[2]);
+  const numCols = lastCol - firstCol + 1;
+  const numRows = parseInt(lastCell[0]) - parseInt(firstCell[0]) + 1;
+
+  // Create a 2D array of values
+  const valueGrid = [];
+  for (let r = 0; r < numRows; r++) {
+    const row = [];
+    for (let c = 0; c < numCols; c++) {
+      const index = r * numCols + c;
+      row.push(values[index]);
+    }
+    valueGrid.push(row);
+  }
+
+  clipboard.value = {
+    values: valueGrid,
+    isMultiCell: true,
+    dimensions: {
+      rows: numRows,
+      cols: numCols,
+    },
+  };
+
+  // Also copy to system clipboard
+  navigator.clipboard.writeText(values.join("\t"));
+};
+
+const handlePaste = (event) => {
+  if (selectedCells.value.length === 0) return;
+
+  const targetCell = selectedCells.value[0];
+  const [startRow, startCol, startType] = targetCell
+    .split("-")
+    .map((val, i) => (i === 2 ? val : parseInt(val)));
+
+  if (clipboard.value.isMultiCell) {
+    const { values, dimensions } = clipboard.value;
+    let currentRow = startRow;
+    let isInput = startType === "input";
+
+    // Paste values maintaining the rectangular structure
+    for (let r = 0; r < dimensions.rows; r++) {
+      if (currentRow >= scenarioTable.value.testTable.rows.length) break;
+
+      let currentCol = startCol;
+      let currentType = isInput;
+
+      for (let c = 0; c < dimensions.cols; c++) {
+        const maxCol = currentType
+          ? scenarioTable.value.testTable.inputColumns.length
+          : scenarioTable.value.testTable.resultColumns.length;
+
+        if (currentCol >= maxCol) {
+          if (currentType) {
+            // Switch to result columns
+            currentType = false;
+            currentCol = 0;
+          } else {
+            // Move to next row
+            currentRow++;
+            currentType = isInput;
+            currentCol = startCol;
+            if (currentRow >= scenarioTable.value.testTable.rows.length) break;
+          }
+        }
+
+        setCellValue(currentRow, currentCol, values[r][c], currentType);
+        currentCol++;
+      }
+
+      currentRow++;
+    }
+  } else {
+    // Paste single value to all selected cells
+    const value = clipboard.value.values[0][0];
+    selectedCells.value.forEach((cellKey) => {
+      const [row, col, type] = cellKey.split("-");
+      setCellValue(parseInt(row), parseInt(col), value, type === "input");
+    });
+  }
+};
+
+const isCellSelected = (rowIndex, colIndex, isInput) => {
+  const cellKey = `${rowIndex}-${colIndex}-${isInput ? "input" : "result"}`;
+  return selectedCells.value.includes(cellKey);
+};
+
+// Add keyboard event listeners
+onMounted(() => {
+  window.addEventListener("keydown", (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === "c") {
+      handleCopy(event);
+    } else if ((event.ctrlKey || event.metaKey) && event.key === "v") {
+      event.preventDefault(); // Prevent normal paste
+      handlePaste(event);
+    }
+  });
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleCopy);
+  window.removeEventListener("keydown", handlePaste);
+});
+
 onMounted(async () => {
   await loadTestScenario();
   await loadTestHistory();
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleCopy);
+  window.removeEventListener("keydown", handlePaste);
 });
 </script>
 
@@ -826,6 +1132,8 @@ thead td > div.header {
   background: #001d27;
   color: #ffffff;
   cursor: pointer;
+  border: none;
+  padding: 0.5rem 1rem;
 }
 
 td.index-cell {
@@ -967,6 +1275,10 @@ input[type="text"]::placeholder {
   border-right: none;
 }
 
+.decisionable-table thead td {
+  padding: 0.5rem 1rem;
+}
+
 .decisionable-table td {
   position: relative;
 }
@@ -985,8 +1297,11 @@ input[type="text"]::placeholder {
 }
 
 .decisionable-table td {
-  padding: 0.5rem 1rem;
   margin: 0;
+}
+
+.decisionable-table td input {
+  padding: 0.5rem 1rem;
 }
 
 .decisionable-table tbody td {
@@ -1021,7 +1336,7 @@ input[type="text"]::placeholder {
   font-size: 0.85rem;
   font-weight: 300;
   font-family: "Inter";
-  padding: 0;
+  padding: 0.5rem;
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
@@ -1031,6 +1346,13 @@ input[type="text"]::placeholder {
 
 .decisionable-table tbody td.result select:focus {
   outline: none;
+}
+
+.decisionable-table td.failure-count {
+  text-align: right;
+}
+.decisionable-table td.failure-count img {
+  margin-right: 0.75rem;
 }
 
 .decisionable-table td.result {
@@ -1047,8 +1369,20 @@ input[type="text"]::placeholder {
   border-right: 3px double #00bfd3;
 }
 
+.decisionable-table tr .result:not(:has(~ .result)) {
+  border-right: 3px double #00bfd3;
+}
+
 .decisionable-table tfoot td {
   border-top: 3px double #001d27;
+}
+
+.decisionable-table td:nth-last-child(2) {
+  padding: 0.5rem;
+}
+.decisionable-table td:first-child {
+  padding: 0.5rem;
+  width: 4rem;
 }
 
 .fieldEditPopup {
@@ -1124,7 +1458,6 @@ input[type="text"]::placeholder {
   background: #001d27;
   color: #ffffff;
   cursor: pointer;
-  padding: 0.5rem 1rem;
 }
 
 .headers table input[type="text"] {
@@ -1220,5 +1553,25 @@ input[type="text"]::placeholder {
 
 .password-toggle:hover img {
   opacity: 1;
+}
+
+.last-run {
+  margin: 1rem 1rem;
+}
+
+td.historical-test img {
+  opacity: 0.25;
+}
+
+.decisionable-table td.selected {
+  background-color: rgba(0, 191, 211, 0.1);
+}
+
+.decisionable-table td.selected input {
+  background-color: rgba(0, 191, 211, 0);
+}
+
+.decisionable-table td.selected select {
+  background-color: rgba(0, 191, 211, 0);
 }
 </style>
