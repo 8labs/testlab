@@ -8,13 +8,13 @@ Perfect for devs, testers, and business analysts who care about real-world scena
 
 ## Overview
 
-TestLab is a modern API testing tool that combines the best features of tools like Postman, Bruno, and Insomnia with a unique tabular interface. It's designed to streamline the process of creating and running multiple test cases for API endpoints.
+Testlab is a modern API testing tool that combines the best features of tools like Postman, Bruno, and Insomnia with a unique tabular interface. It's designed to streamline the process of creating and running multiple test cases for API endpoints.
 
 ### Key Features
 
-- **Tabular Test Interface**: Create multiple test cases in a single view
-- **Efficient Test Creation**: Add multiple permutations of inputs and expected outputs in a structured format
-- **Automated Testing**: Run multiple test cases in sequence with detailed reporting
+- **Tabular Test Interface**: Add multiple permutations of inputs and expected outputs in a structured format
+- **Efficient Test Creation**: Create multiple test cases in a single view
+- **Automated Testing**: Run multiple test cases in sequence with detailed reporting and debugging
 - **It's darn pretty**: Who says open source has to be ugly?
 
 ### Who's it for?
@@ -22,6 +22,7 @@ TestLab is a modern API testing tool that combines the best features of tools li
 - Developers
 - QAs
 - BAs
+- Anyone else who wants to easily build tests for APIs and business rules
 
 ### What's it for?
 
@@ -32,6 +33,7 @@ TestLab is a modern API testing tool that combines the best features of tools li
 - Data-Driven Testing (DDT)
 - Contract testing (at least lightweight testing)
 - Testing business rules decisions
+- Behavior-Driven Development (BDD)
 
 ## Getting Started
 
@@ -73,7 +75,7 @@ The built application will be available in the `dist` directory.
 ## Usage
 
 1. **Create a New Test Suite**:
-   - Click "New Test Suite" to start
+   - Click "new test scenario" or the blue + dot to start
    - Enter the base URL for your API endpoint
 
 2. **Add Test Cases**:
@@ -81,8 +83,7 @@ The built application will be available in the `dist` directory.
    - Each row represents a unique test case with:
      - Input parameters
      - Headers
-     - Expected response values
-     - Assertions
+     - Expected response values (assertions)
 
 3. **Run Tests**:
    - Execute individual test cases or run the entire suite
@@ -90,7 +91,7 @@ The built application will be available in the `dist` directory.
 
 ## Variable Mapping and Expressions
 
-TestLab supports powerful variable mapping and expressions for both input and output validation:
+Testlab supports powerful variable mapping and expressions for both input and output validation:
 
 ### Input Variables
 
