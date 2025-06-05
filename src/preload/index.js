@@ -25,7 +25,7 @@ if (process.contextIsolated) {
         deleteTestScenario: (id) => ipcRenderer.invoke('delete-test-scenario', id),
         updateTestScenarioMetadata: (id, metadata) =>
           ipcRenderer.invoke('update-test-scenario-metadata', id, metadata),
-        loadScenarioListContextMenu: (id) => ipcRenderer.invoke('load-scenario-list-context-menu', id),
+        //loadScenarioListContextMenu: (id) => ipcRenderer.invoke('load-scenario-list-context-menu', id),
         onTestDeleted: (callback) => ipcRenderer.on('test-deleted', callback),
 
         // Test history operations
