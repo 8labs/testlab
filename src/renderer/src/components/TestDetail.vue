@@ -31,6 +31,9 @@
         >
           {{ selectedTest.test.httpStatus }}
         </td>
+        <td v-else-if="isCountExpression(inputItemIndex)">
+          {{ getCountValue(inputItemIndex) }}
+        </td>
         <td v-else>
           {{ getPropertyValue(inputItemIndex) }}
         </td>
@@ -74,6 +77,25 @@ const emit = defineEmits(["close"]);
 
 const close = () => {
   emit("close");
+};
+
+const isCountExpression = (index) => {
+  const expression =
+    props.selectedTest?.testTable?.resultColumns?.[index]?.expression || "";
+  return expression.match(/\{\{[\s]+?count\((.*?)\)[\s]+?\}\}/) !== null;
+};
+
+const getCountValue = (index) => {
+  const expression =
+    props.selectedTest?.testTable?.resultColumns?.[index]?.expression || "";
+  const countMatch = expression.match(/\{\{[\s]+?count\((.*?)\)[\s]+?\}\}/);
+  if (!countMatch) return "";
+
+  const jsonPath = countMatch[1];
+  const count = props.selectedTest?.test?.counts?.find(
+    (c) => c.name === jsonPath
+  );
+  return count ? count.count : "";
 };
 
 const getPropertyValue = (index) => {

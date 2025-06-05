@@ -129,12 +129,50 @@ class TestExecutor {
 
             // Check if results match
             let match = true;
+            const counts = [];
             for (let i = 0; i < scenario.testTable.resultColumns.length; i++) {
                 const col = scenario.testTable.resultColumns[i];
                 const item = row.resultItems[i];
                 let actualValue;
 
-                if (col.expression.replace(' ', '').toLowerCase() === '{{http_status}}') {
+                // Handle count() function in expressions
+                const countMatch = col.expression.match(/\{\{[\s]+?count\((.*?)\)[\s]+?\}\}/);
+                if (countMatch) {
+                    const jsonPath = countMatch[1];
+                    if (jsonPath.startsWith('$.')) {
+                        const path = jsonPath.substring(2).split('.');
+                        let current = responseJson;
+                        let found = true;
+
+                        // Traverse the path
+                        for (const key of path) {
+                            if (typeof current !== 'object' || current === null) {
+                                found = false;
+                                break;
+                            }
+                            current = current[key];
+                            if (current === undefined) {
+                                found = false;
+                                break;
+                            }
+                        }
+
+                        if (!found || !Array.isArray(current)) {
+                            match = false;
+                            break;
+                        }
+
+                        actualValue = current.length.toString();
+                        // Add to counts array
+                        counts.push({
+                            name: jsonPath,
+                            count: current.length
+                        });
+                    } else {
+                        match = false;
+                        break;
+                    }
+                } else if (col.expression.replace(' ', '').toLowerCase() === '{{http_status}}') {
                     actualValue = httpStatus.toString();
                 } else if (col.expression.startsWith('$.')) {
                     const json_path = col.expression.substring(2).split('.');
@@ -175,7 +213,8 @@ class TestExecutor {
             return {
                 httpStatus,
                 jsonContent: responseJson,
-                match
+                match,
+                counts
             };
         } catch (error) {
             return {
