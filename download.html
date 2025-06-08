@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>8labs Download</title>
+    <style>
+      .recommended {
+        font-weight: bold;
+        color: green;
+      }
+      .download-section {
+        margin: 20px 0;
+      }
+      .download-list {
+        list-style: none;
+        padding: 0;
+      }
+      .download-list li {
+        margin: 10px 0;
+      }
+      .download-list a {
+        text-decoration: none;
+        color: #0066cc;
+      }
+      .download-list a:hover {
+        text-decoration: underline;
+      }
+      .platform-title {
+        font-size: 1.2em;
+        margin-bottom: 10px;
+      }
+      .platform-section {
+        display: none;
+      }
+      .platform-section.visible {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Download 8labs</h1>
+
+    <div id="downloads" class="download-section">
+      <div id="mac-downloads" class="platform-section">
+        <div class="platform-title">macOS Downloads</div>
+        <ul class="download-list">
+          <li>
+            <a href="https://files.8labs.com/8labs-0.0.5-mac-intel.dmg"
+              >8labs-0.0.5-mac-intel.dmg</a
+            >
+            (Intel Mac)
+          </li>
+          <li>
+            <a href="https://files.8labs.com/8labs-0.0.5-mac-arm64.dmg"
+              >8labs-0.0.5-mac-arm64.dmg</a
+            >
+            (Apple Silicon)
+          </li>
+        </ul>
+      </div>
+
+      <div id="win-downloads" class="platform-section">
+        <div class="platform-title">Windows Download</div>
+        <ul class="download-list">
+          <li>
+            <a href="https://files.8labs.com/8labs-0.0.5-win-x64.exe"
+              >8labs-0.0.5-win-x64.exe</a
+            >
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      // Detect platform from userAgent
+      function detectPlatform() {
+        const ua = navigator.userAgent.toLowerCase();
+        if (ua.includes("mac")) return "mac";
+        return "win"; // Default fallback
+      }
+
+      // Show appropriate downloads based on platform
+      function showPlatformDownloads() {
+        const platform = detectPlatform();
+        const macSection = document.getElementById("mac-downloads");
+        const winSection = document.getElementById("win-downloads");
+
+        if (platform === "mac") {
+          macSection.classList.add("visible");
+          winSection.classList.remove("visible");
+        } else {
+          winSection.classList.add("visible");
+          macSection.classList.remove("visible");
+        }
+      }
+
+      // Initialize the page
+      showPlatformDownloads();
+    </script>
+  </body>
+</html>

@@ -138,6 +138,7 @@ onMounted(async () => {});
 </script>
   
 <style scoped>
+/* Close button styles */
 .close-button {
   position: fixed;
   top: 2rem;
@@ -146,6 +147,7 @@ onMounted(async () => {});
   cursor: pointer;
 }
 
+/* Main container styles */
 .test-detail {
   position: absolute;
   right: 0;
@@ -162,14 +164,17 @@ onMounted(async () => {});
   scrollbar-color: #00bfd3 #00000030;
 }
 
+/* Heading styles */
 h3 {
   margin-top: 2rem;
 }
 
+/* Link styles */
 .test-detail a {
   color: #00bfd3;
 }
 
+/* Table styles */
 table {
   width: 100%;
   margin-top: 1rem;
@@ -186,6 +191,7 @@ td.invalid {
   color: #ff0000;
 }
 
+/* JSON content styles */
 .json-content .vjs-tree {
   border: solid 1px #ffffff;
   padding: 1rem;

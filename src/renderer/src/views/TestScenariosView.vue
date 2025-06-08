@@ -417,6 +417,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* Mask overlay */
 .mask {
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 9999;
@@ -427,6 +428,7 @@ onMounted(async () => {
   height: 100%;
 }
 
+/* Name input styles */
 .names {
   margin-top: 1.5rem;
 }
@@ -442,6 +444,7 @@ onMounted(async () => {
   outline: none;
 }
 
+/* Address bar styles */
 .address-bar {
   display: flex;
   width: 100%;
@@ -499,9 +502,7 @@ onMounted(async () => {
   padding-top: 0.25rem;
 }
 
-.tab-bar {
-}
-
+/* Tab bar styles */
 .tab-bar button {
   background-color: #fff;
   color: #001d27;
@@ -517,6 +518,7 @@ onMounted(async () => {
   border-bottom: 3px solid #00bfd3;
 }
 
+/* Headers table styles */
 .headers table {
   width: 100%;
   border-collapse: collapse;
@@ -550,6 +552,7 @@ onMounted(async () => {
   color: #001d27;
 }
 
+/* Authentication styles */
 .auth {
   padding: 1rem;
 }
@@ -605,6 +608,7 @@ onMounted(async () => {
   color: #c0c0c0;
 }
 
+/* Password input styles */
 .password-input-container {
   position: relative;
   display: flex;

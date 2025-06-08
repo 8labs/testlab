@@ -492,14 +492,35 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.decision-table {
-  min-width: 100%;
-}
-table {
+/* Base table styles */
+.decisionable-table {
   min-width: 100%;
 }
 
-thead td > div.header {
+.decisionable-table table {
+  min-width: 100%;
+  font-family: "Nunito", sans-serif;
+  font-weight: 300;
+  background-color: #001d27;
+  padding: 0;
+  border: 1px solid #001d27;
+  border-spacing: 0;
+}
+
+/* Table cell base styles */
+.decisionable-table td {
+  position: relative;
+  margin: 0;
+}
+
+/* Header styles */
+.decisionable-table thead td {
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-right: 1px solid #00bfd3;
+}
+
+.decisionable-table thead td > div.header {
   top: -1.25rem;
   bottom: 0;
   position: absolute;
@@ -509,28 +530,151 @@ thead td > div.header {
   cursor: pointer;
 }
 
-td.index-cell {
+.decisionable-table thead td h5 {
+  color: #fff;
+  font-weight: 300;
+  font-size: 0.75rem;
+}
+
+.decisionable-table thead td span {
+  color: #fff;
+  width: 100%;
+  font-weight: 300;
+  font-family: "Inter";
+  font-size: 0.85rem;
+}
+
+/* Body styles */
+.decisionable-table tbody {
+  color: #001d27;
+  background-color: white;
+}
+
+.decisionable-table tbody td {
+  border-right: 1px solid #00bfd3;
+  border-bottom: 1px solid #001d27;
+}
+
+/* Input styles */
+.decisionable-table input[type="text"] {
+  border: none;
+  width: 100%;
+  font-weight: 300;
+  font-family: "Inter";
+  padding: 0.5rem 1rem;
+}
+
+.decisionable-table input[type="text"]:focus {
+  outline: none;
+}
+
+.decisionable-table input[type="text"]::placeholder {
+  color: #c0c0c0;
+}
+
+.decisionable-table thead input[type="text"] {
+  background-color: #001d27;
+  color: white;
+}
+
+.decisionable-table tbody input[type="text"] {
+  color: #001d27;
+}
+
+/* Result cell styles */
+.decisionable-table tbody td.result div {
+  display: flex;
+}
+
+.decisionable-table tbody td.result select {
+  width: 2rem;
+  border: none;
+  color: #001d27;
+  font-size: 0.85rem;
+  font-weight: 300;
+  font-family: "Inter";
+  padding: 0.5rem;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-size: 1rem;
+  padding-right: 1rem;
+}
+
+.decisionable-table tbody td.result select:focus {
+  outline: none;
+}
+
+/* Special cell styles */
+.decisionable-table td.index-cell {
   width: 6rem;
 }
 
-td .delete-row {
+.decisionable-table td.no-border {
+  border-right: none;
+}
+
+.decisionable-table td:last-child {
+  border-right: none;
+  padding: 0.5rem 1rem;
+}
+
+.decisionable-table td:first-child {
+  padding: 0.5rem;
+  width: 4rem;
+}
+
+.decisionable-table td:nth-last-child(2) {
+  padding: 0.5rem 1rem;
+}
+
+.decisionable-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Row styles */
+.decisionable-table tr .condition:not(:has(~ .condition)) {
+  border-right: 3px double #00bfd3;
+}
+
+.decisionable-table tr .result:not(:has(~ .result)) {
+  border-right: 3px double #00bfd3;
+}
+
+.decisionable-table tr.lastrow td {
+  background: #001d27;
+  color: #ffffff;
+  cursor: pointer;
+  border: none;
+  padding: 0.5rem 1rem;
+}
+
+/* Delete row button styles */
+.decisionable-table td .delete-row {
   display: none;
-}
-
-td:hover .delete-row {
-  display: inline-block;
-}
-
-.delete-row {
   cursor: pointer;
   opacity: 0.7;
   margin-right: 5px;
 }
 
-.delete-row:hover {
+.decisionable-table td:hover .delete-row {
+  display: inline-block;
+}
+
+.decisionable-table .delete-row:hover {
   opacity: 1;
 }
 
+/* Header add button styles */
+.decisionable-table .header-add {
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translate(50%, -50%);
+  z-index: 5000;
+}
+
+/* Field edit popup styles */
 .fieldEditPopup {
   position: absolute;
   background: white;
@@ -568,150 +712,21 @@ td:hover .delete-row {
   font-size: 0.8rem;
 }
 
-.decisionable-table table {
-  font-family: "Nunito", sans-serif;
-  font-weight: 300;
-  background-color: #001d27;
-  padding: 0;
-  border: 1px solid #001d27;
-  border-spacing: 0;
-}
-
-.decisionable-table input[type="text"]:focus {
-  outline: none;
-}
-
-.decisionable-table input[type="text"] {
-  border: none;
-  width: 100%;
-  font-weight: 300;
-  font-family: "Inter";
-}
-
-.decisionable-table thead td span {
-  color: #fff;
-  width: 100%;
-  font-weight: 300;
-  font-family: "Inter";
-  font-size: 0.85rem;
-}
-
-.decisionable-table thead input[type="text"] {
-  background-color: #001d27;
-  color: white;
-}
-
-.decisionable-table tbody {
-  color: #001d27;
-}
-
-.decisionable-table thead td {
-  cursor: pointer;
-}
-
-.decisionable-table thead th {
-  padding: 0.5rem 1rem;
-  color: white;
-  font-weight: 300;
-  padding: 2rem 1rem 0.5rem 1rem;
-  text-align: left;
-  border-right: 1px solid #00bfd3;
-}
-
-input[type="text"]::placeholder {
-  color: #c0c0c0;
-}
-
-.decisionable-table thead td h5 {
-  color: #fff;
-  font-weight: 300;
-  font-size: 0.75rem;
-}
-
-.decisionable-table .header-add {
-  position: absolute;
-  right: -5px;
-  top: 50%;
-  transform: translate(50%, -50%);
-  z-index: 5000;
-}
-
-.decisionable-table thead td {
-  padding: 0.5rem 1rem;
-}
-
-.decisionable-table td {
-  position: relative;
-}
-
-.decisionable-table tbody {
-  background-color: white;
-}
-
-.decisionable-table tbody input[type="text"] {
-  color: #001d27;
-}
-
+/* Footer styles */
 .decisionable-table tfoot {
   color: #001d27;
   background-color: white;
 }
 
-.decisionable-table td {
-  margin: 0;
+.decisionable-table tfoot td {
+  border-top: 3px double #001d27;
 }
 
-.decisionable-table td input {
-  padding: 0.5rem 1rem;
-}
-
-.decisionable-table tbody td {
-  border-right: 1px solid #00bfd3;
-  border-bottom: 1px solid #001d27;
-}
-
-.decisionable-table thead td {
-  border-right: 1px solid #00bfd3;
-}
-
-.decisionable-table td.no-border {
-  border-right: none;
-}
-
-.decisionable-table td:last-child {
-  border-right: none;
-}
-
-.decisionable-table tr:last-child td {
-  border-bottom: none;
-}
-
-.decisionable-table tbody td.result div {
-  display: flex;
-}
-
-.decisionable-table tbody td.result select {
-  width: 2rem;
-  border: none;
-  color: #001d27;
-  font-size: 0.85rem;
-  font-weight: 300;
-  font-family: "Inter";
-  padding: 0.5rem;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-size: 1rem;
-  padding-right: 1rem;
-}
-
-.decisionable-table tbody td.result select:focus {
-  outline: none;
-}
-
+/* Status and count styles */
 .decisionable-table td.failure-count {
   text-align: right;
 }
+
 .decisionable-table td.failure-count img {
   margin-right: 0.75rem;
 }
@@ -723,76 +738,11 @@ input[type="text"]::placeholder {
   margin: 0 0.25rem;
 }
 
-.decisionable-table tr .condition:not(:has(~ .condition)) {
-  border-right: 3px double #00bfd3;
-}
-
-.decisionable-table tr .result:not(:has(~ .result)) {
-  border-right: 3px double #00bfd3;
-}
-
-.decisionable-table tfoot td {
-  border-top: 3px double #001d27;
-}
-
-.decisionable-table td:nth-last-child(2) {
-  padding: 0.5rem 1rem;
-}
-.decisionable-table td:last-child {
-  padding: 0.5rem 1rem;
-}
-.decisionable-table td:first-child {
-  padding: 0.5rem;
-  width: 4rem;
-}
-
-.fieldEditPopup {
-  padding: 1rem;
-  background: #00bfd3;
-  border-radius: 0.5rem;
-  color: white;
-  position: absolute;
-  transform: translate(-50%, 100%);
-  bottom: -1rem;
-  left: 50%;
-  width: 20rem;
-  z-index: 10000;
-}
-
-.fieldEditPopup div {
-  margin-bottom: 1rem;
-}
-
-.fieldEditPopup button {
-  background: white;
-  color: #00bfd3;
-  float: right;
-}
-
-.fieldEditPopup input[type="text"] {
-  padding: 0.5rem;
-  background: #00bfd3 !important;
-  color: white;
-  border: 1px solid white;
-  border-radius: 0.5rem;
-}
-
-.decisionable-table tr.lastrow td {
-  background: #001d27;
-  color: #ffffff;
-  cursor: pointer;
-  border: none;
-  padding: 0.5rem 1rem;
-}
-
-.last-run {
-  margin: 1rem 1rem;
-}
-
 td.historical-test img {
   opacity: 0.25;
 }
 
+/* Selection styles */
 .decisionable-table td.selected {
   background-color: rgba(0, 191, 211, 0.1);
 }
@@ -803,5 +753,10 @@ td.historical-test img {
 
 .decisionable-table td.selected select {
   background-color: rgba(0, 191, 211, 0);
+}
+
+/* Last run text */
+.last-run {
+  margin: 1rem 1rem;
 }
 </style>

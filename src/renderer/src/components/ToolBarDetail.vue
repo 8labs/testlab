@@ -112,10 +112,13 @@ watch(
 </script>
 
 <style scoped>
+/* Base container styles */
 .toolbar-detail {
   padding: 0 1.5rem;
   padding-bottom: 1rem;
 }
+
+/* No tests message styles */
 .no-tests {
   margin-top: 2rem;
   align-self: flex-start;
@@ -125,9 +128,12 @@ watch(
   margin: 0.5rem 0;
 }
 
+/* Link styles */
 a {
   color: #00bfd3;
 }
+
+/* Logo bar styles */
 .logobar {
   align-self: flex-start;
 }
@@ -138,6 +144,7 @@ a {
   margin-left: 0.25rem;
 }
 
+/* Filter bar styles */
 .filter-bar {
   margin-top: 2rem;
   display: flex;
@@ -166,10 +173,10 @@ a {
   margin-top: 0.5rem;
 }
 
+/* User section styles */
 .user {
   position: absolute;
   bottom: 1.5rem;
-
   text-align: left;
   align-self: flex-start;
 }
@@ -180,6 +187,7 @@ a {
   padding: 0.5rem 0;
   margin: 0;
 }
+
 .user h4 {
   font-size: 0.75rem;
   font-weight: 300;
@@ -187,10 +195,12 @@ a {
   margin: 0 0 0.5rem 0;
 }
 
+/* List styles */
 ul {
   align-self: flex-start;
   overflow-y: auto;
 }
+
 li {
   width: calc(100% - 1.75rem);
   list-style-type: none;
@@ -202,6 +212,7 @@ li {
   user-select: none;
   position: relative;
 }
+
 li a {
   font-weight: 100;
   cursor: pointer;
@@ -214,6 +225,7 @@ li .method {
   padding-right: 0.5rem;
   margin: 0;
 }
+
 li a,
 :visited {
   text-decoration: none;
@@ -225,6 +237,7 @@ li.active a:visited {
   color: #00bfd3;
 }
 
+/* Toolbar item styles */
 .toolbar-item span {
   background-color: #fff;
   padding: 0 0.5rem;
@@ -233,6 +246,7 @@ li.active a:visited {
   margin-left: 0.5rem;
 }
 
+/* Failure count styles */
 .failure-count {
   position: absolute;
   right: 1rem;
