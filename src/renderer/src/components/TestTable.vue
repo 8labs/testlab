@@ -220,6 +220,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue";
+import { handleCopy, handlePaste } from "../services/clipboardService";
 
 const props = defineProps({
   testTable: {
@@ -459,146 +460,6 @@ const handleCellClick = (event, rowIndex, colIndex, isInput = true) => {
   lastSelectedCell.value = cellKey;
 };
 
-const getCellValue = (rowIndex, colIndex, isInput) => {
-  const row = props.testTable.rows[rowIndex];
-  if (!row) return "";
-
-  if (isInput) {
-    return row.inputItems[colIndex]?.value || "";
-  } else {
-    const item = row.resultItems[colIndex];
-    return item ? `${item.operator}${item.value}` : "";
-  }
-};
-
-const setCellValue = (rowIndex, colIndex, value, isInput) => {
-  const row = props.testTable.rows[rowIndex];
-  if (!row) return;
-
-  if (isInput) {
-    if (!row.inputItems[colIndex]) {
-      row.inputItems[colIndex] = { value: "" };
-    }
-    row.inputItems[colIndex].value = value;
-  } else {
-    if (!row.resultItems[colIndex]) {
-      row.resultItems[colIndex] = { value: "", operator: "=" };
-    }
-    const match = value.match(/^([=!<>]+)(.*)$/);
-    if (match) {
-      row.resultItems[colIndex].operator = match[1];
-      row.resultItems[colIndex].value = match[2];
-    } else {
-      row.resultItems[colIndex].value = value;
-    }
-  }
-  updateData();
-};
-
-const handleCopy = (event) => {
-  if (selectedCells.value.length === 0) return;
-
-  const sortedCells = [...selectedCells.value].sort((a, b) => {
-    const [rowA, colA, typeA] = a.split("-");
-    const [rowB, colB, typeB] = b.split("-");
-    if (rowA !== rowB) return parseInt(rowA) - parseInt(rowB);
-    if (typeA !== typeB) return typeA === "input" ? -1 : 1;
-    return parseInt(colA) - parseInt(colB);
-  });
-
-  const values = sortedCells.map((cellKey) => {
-    const [row, col, type] = cellKey.split("-");
-    return getCellValue(parseInt(row), parseInt(col), type === "input");
-  });
-
-  const firstCell = sortedCells[0].split("-");
-  const lastCell = sortedCells[sortedCells.length - 1].split("-");
-
-  const inputCols = props.testTable.inputColumns.length;
-  const resultCols = props.testTable.resultColumns.length;
-
-  const getAbsoluteCol = (col, type) => {
-    return type === "input" ? parseInt(col) : parseInt(col) + inputCols;
-  };
-
-  const firstCol = getAbsoluteCol(firstCell[1], firstCell[2]);
-  const lastCol = getAbsoluteCol(lastCell[1], lastCell[2]);
-  const numCols = lastCol - firstCol + 1;
-  const numRows = parseInt(lastCell[0]) - parseInt(firstCell[0]) + 1;
-
-  const valueGrid = [];
-  for (let r = 0; r < numRows; r++) {
-    const row = [];
-    for (let c = 0; c < numCols; c++) {
-      const index = r * numCols + c;
-      row.push(values[index]);
-    }
-    valueGrid.push(row);
-  }
-
-  clipboard.value = {
-    values: valueGrid,
-    isMultiCell: true,
-    dimensions: {
-      rows: numRows,
-      cols: numCols,
-    },
-  };
-
-  navigator.clipboard.writeText(values.join("\t"));
-};
-
-const handlePaste = (event) => {
-  if (selectedCells.value.length === 0) return;
-
-  const targetCell = selectedCells.value[0];
-  const [startRow, startCol, startType] = targetCell
-    .split("-")
-    .map((val, i) => (i === 2 ? val : parseInt(val)));
-
-  if (clipboard.value.isMultiCell) {
-    const { values, dimensions } = clipboard.value;
-    let currentRow = startRow;
-    let isInput = startType === "input";
-
-    for (let r = 0; r < dimensions.rows; r++) {
-      if (currentRow >= props.testTable.rows.length) break;
-
-      let currentCol = startCol;
-      let currentType = isInput;
-
-      for (let c = 0; c < dimensions.cols; c++) {
-        const maxCol = currentType
-          ? props.testTable.inputColumns.length
-          : props.testTable.resultColumns.length;
-
-        if (currentCol >= maxCol) {
-          if (currentType) {
-            currentType = false;
-            currentCol = 0;
-          } else {
-            currentRow++;
-            currentType = isInput;
-            currentCol = startCol;
-            if (currentRow >= props.testTable.rows.length) break;
-          }
-        }
-
-        setCellValue(currentRow, currentCol, values[r][c], currentType);
-        currentCol++;
-      }
-
-      currentRow++;
-    }
-  } else {
-    const value = clipboard.value.values[0][0];
-    selectedCells.value.forEach((cellKey) => {
-      const [row, col, type] = cellKey.split("-");
-      setCellValue(parseInt(row), parseInt(col), value, type === "input");
-    });
-  }
-};
-
 const isCellSelected = (rowIndex, colIndex, isInput) => {
   const cellKey = `${rowIndex}-${colIndex}-${isInput ? "input" : "result"}`;
   return selectedCells.value.includes(cellKey);
@@ -608,10 +469,18 @@ const isCellSelected = (rowIndex, colIndex, isInput) => {
 onMounted(() => {
   window.addEventListener("keydown", (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key === "c") {
-      handleCopy(event);
+      const clipboardData = handleCopy(selectedCells.value, props.testTable);
+      if (clipboardData) {
+        clipboard.value = clipboardData;
+      }
     } else if ((event.ctrlKey || event.metaKey) && event.key === "v") {
       event.preventDefault();
-      handlePaste(event);
+      handlePaste(
+        selectedCells.value,
+        props.testTable,
+        clipboard.value,
+        updateData
+      );
     }
   });
 });
