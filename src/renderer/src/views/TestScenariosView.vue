@@ -233,53 +233,37 @@ const updateMetadata = async () => {
   }
 };
 
-// Table event handlers
-const handleColumnAdded = async ({ column, isInput }) => {
+const saveScenario = async () => {
   try {
     await saveTestScenario(toRaw(scenarioTable.value));
   } catch (error) {
-    console.error("Error saving after column added:", error);
+    console.error("Error saving scenario:", error);
   }
+};
+
+// Table event handlers
+const handleColumnAdded = async ({ column, isInput }) => {
+  await saveScenario();
 };
 
 const handleColumnRemoved = async ({ column, isInput, index }) => {
-  try {
-    await saveTestScenario(toRaw(scenarioTable.value));
-  } catch (error) {
-    console.error("Error saving after column removed:", error);
-  }
+  await saveScenario();
 };
 
 const handleColumnUpdated = async ({ column, isInput }) => {
-  try {
-    await saveTestScenario(toRaw(scenarioTable.value));
-  } catch (error) {
-    console.error("Error saving after column updated:", error);
-  }
+  await saveScenario();
 };
 
 const handleRowAdded = async (row) => {
-  try {
-    await saveTestScenario(toRaw(scenarioTable.value));
-  } catch (error) {
-    console.error("Error saving after row added:", error);
-  }
+  await saveScenario();
 };
 
 const handleRowRemoved = async ({ row, index }) => {
-  try {
-    await saveTestScenario(toRaw(scenarioTable.value));
-  } catch (error) {
-    console.error("Error saving after row removed:", error);
-  }
+  await saveScenario();
 };
 
 const handleDataUpdated = async (testTable) => {
-  try {
-    await saveTestScenario(toRaw(scenarioTable.value));
-  } catch (error) {
-    console.error("Error saving after data updated:", error);
-  }
+  await saveScenario();
 };
 
 const handleTestExecuted = async ({ row, rowIndex }) => {
