@@ -643,6 +643,10 @@ const runtests = async () => {
   testsRunning.value = true;
   testResults.value = [];
 
+  window.eightlabs.trackEvent("tests_executed", {
+    row_count: scenarioTable.value.testTable.rows.length,
+  });
+
   const results = [];
   for (let row of scenarioTable.value.testTable.rows) {
     const result = await executeSingleTest(

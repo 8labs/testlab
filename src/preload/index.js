@@ -33,6 +33,9 @@ if (process.contextIsolated) {
         getTestHistory: (scenarioId) => ipcRenderer.invoke('get-test-history', scenarioId),
         getAllTestHistory: () => ipcRenderer.invoke('get-all-test-history'),
         getFailureCount: (scenarioId) => ipcRenderer.invoke('get-failure-count', scenarioId),
+
+        // Analytics operations
+        trackEvent: (eventType, details) => ipcRenderer.invoke('track-event', eventType, details),
       }
     );
   } catch (error) {

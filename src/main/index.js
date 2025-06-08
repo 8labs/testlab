@@ -6,10 +6,12 @@ import icon from '../../resources/icon.icns?asset'
 import TestExecutor from './testExecutor.mjs';
 import DataService from './dataService.mjs';
 import TestHistoryService from './testHistoryService.mjs';
+import AnalyticsService from './analyticsService.mjs';
 
 const testExecutor = new TestExecutor();
 const dataService = new DataService();
 const testHistoryService = new TestHistoryService();
+const analyticsService = new AnalyticsService();
 
 function createWindow() {
   // Create the browser window.
@@ -67,12 +69,14 @@ function createWindow() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
   dataService.initialize();
   testHistoryService.initialize();
+  await analyticsService.initialize();
+  await analyticsService.trackAppOpened();
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -83,7 +87,8 @@ app.whenReady().then(() => {
 
   // Set up IPC handlers for data operations
   ipcMain.handle('get-all-test-scenarios', async () => {
-    return await dataService.getAllTestScenarios();
+    const scenarios = await dataService.getAllTestScenarios();
+    return scenarios;
   });
 
   ipcMain.handle('get-test-scenario', async (event, id) => {
@@ -91,7 +96,10 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('save-test-scenario', async (event, scenario) => {
-    return await dataService.saveTestScenario(scenario);
+    const savedScenario = await dataService.saveTestScenario(scenario);
+    const allScenarios = await dataService.getAllTestScenarios();
+    await analyticsService.trackTestCreated(allScenarios.length);
+    return savedScenario;
   });
 
   ipcMain.handle('delete-test-scenario', async (event, id) => {
@@ -120,11 +128,17 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('execute-test', async (event, scenario, row) => {
-    return await testExecutor.executeTest(scenario, row);
+    const result = await testExecutor.executeTest(scenario, row);
+    return result;
   });
 
   ipcMain.handle('execute-all-tests', async (event, scenario) => {
-    return await testExecutor.executeAllTests(scenario);
+    const results = await testExecutor.executeAllTests(scenario);
+    return results;
+  });
+
+  ipcMain.handle('track-event', async (event, eventType, details) => {
+    await analyticsService.trackEvent(eventType, details);
   });
 
   createWindow()
