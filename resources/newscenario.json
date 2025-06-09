@@ -1,0 +1,45 @@
+{
+  "name": "New Test Scenario",
+  "endpoint": "",
+  "method": "POST",
+  "testTable": {
+    "headers": [
+      {
+        "key": "new_header",
+        "value": ""
+      }
+    ],
+    "inputColumns": [
+      {
+        "key": "new_input",
+        "label": "New Input",
+        "expression": "",
+        "editVisible": false
+      }
+    ],
+    "resultColumns": [
+      {
+        "key": "new_expected_result",
+        "label": "New Expected Result",
+        "expression": "",
+        "editVisible": false
+      }
+    ],
+    "rows": [
+      {
+        "inputItems": [
+          {
+            "value": ""
+          }
+        ],
+        "resultItems": [
+          {
+            "value": "",
+            "operator": "="
+          }
+        ]
+      }
+    ],
+    "authentication": {}
+  }
+}

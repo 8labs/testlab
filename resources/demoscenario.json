@@ -139,6 +139,36 @@
             "operator": "="
           }
         ]
+      },
+      {
+        "inputItems": [
+          {
+            "value": "value3"
+          },
+          {
+            "value": "2"
+          },
+          {
+            "value": "John"
+          },
+          {
+            "value": "30"
+          }
+        ],
+        "resultItems": [
+          {
+            "value": "2000",
+            "operator": "="
+          },
+          {
+            "value": "John",
+            "operator": "="
+          },
+          {
+            "value": "200",
+            "operator": "="
+          }
+        ]
       }
     ],
     "authentication": {

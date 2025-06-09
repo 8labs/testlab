@@ -12,6 +12,8 @@ files:
 extraResources:
   - from: resources/demoscenario.json
     to: demoscenario.json
+  - from: resources/newscenario.json
+    to: newscenario.json
 asarUnpack:
   - resources/**
 win:

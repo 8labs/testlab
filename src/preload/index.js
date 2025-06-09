@@ -21,6 +21,7 @@ if (process.contextIsolated) {
         // Data operations
         getAllTestScenarios: () => ipcRenderer.invoke('get-all-test-scenarios'),
         getTestScenario: (id) => ipcRenderer.invoke('get-test-scenario', id),
+        createNewTestScenario: () => ipcRenderer.invoke('create-new-test-scenario'),
         saveTestScenario: async (scenario) => await ipcRenderer.invoke('save-test-scenario', scenario),
         deleteTestScenario: (id) => ipcRenderer.invoke('delete-test-scenario', id),
         updateTestScenarioMetadata: (id, metadata) =>
@@ -32,6 +33,9 @@ if (process.contextIsolated) {
         getTestHistory: (scenarioId) => ipcRenderer.invoke('get-test-history', scenarioId),
         getAllTestHistory: () => ipcRenderer.invoke('get-all-test-history'),
         getFailureCount: (scenarioId) => ipcRenderer.invoke('get-failure-count', scenarioId),
+
+        // Context menu operations
+        loadScenarioListContextMenu: (scenarioId) => ipcRenderer.invoke('load-scenario-list-context-menu', scenarioId),
 
         // Analytics operations
         trackEvent: (eventType, details) => ipcRenderer.invoke('track-event', eventType, details),

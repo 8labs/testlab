@@ -95,6 +95,10 @@ app.whenReady().then(async () => {
     return await dataService.getTestScenario(id);
   });
 
+  ipcMain.handle('create-new-test-scenario', async () => {
+    return await dataService.createNewTestScenario();
+  });
+
   ipcMain.handle('save-test-scenario', async (event, scenario) => {
     const savedScenario = await dataService.saveTestScenario(scenario);
     const allScenarios = await dataService.getAllTestScenarios();

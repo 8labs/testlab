@@ -192,21 +192,32 @@
 
           <td
             class="failure-count"
-            v-if="!testsRunning && !!testHistory"
             :colspan="
               testTable.inputColumns.length + testTable.resultColumns.length + 2
             "
           >
-            <img
-              src="../assets/img/exclamation.svg"
-              v-if="!!testHistory && testHistory.failureCount > 0"
-            />{{ testResults.length - testHistory.failureCount }} of
-            {{ testResults.length }} passing
+            <div
+              v-if="
+                !testsRunning &&
+                !!testHistory &&
+                !!testResults &&
+                testResults.length > 0
+              "
+            >
+              <img
+                src="../assets/img/exclamation.svg"
+                v-if="!!testHistory && testHistory.failureCount > 0"
+              />{{ testResults.length - testHistory.failureCount }} of
+              {{ testResults.length }} passing
+            </div>
           </td>
         </tr>
       </tbody>
     </table>
-    <p class="last-run">
+    <p
+      class="last-run"
+      v-if="(!!testHistory && !!testHistory.date) || !!lastRunThisSession"
+    >
       <img src="../assets/img/exclamation.svg" v-if="!lastRunThisSession" />
       Last run
       {{

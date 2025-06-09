@@ -54,6 +54,16 @@
       "buildResources": "resources",
       "output": "dist"
     },
+    "extraResources": [
+      {
+        "from": "resources/demoscenario.json",
+        "to": "demoscenario.json"
+      },
+      {
+        "from": "resources/demoscenario.json",
+        "to": "newscenario.json"
+      }
+    ],
     "mac": {
       "category": "public.app-category.developer-tools"
     },

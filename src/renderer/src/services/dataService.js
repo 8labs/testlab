@@ -9,6 +9,11 @@ export const getTestScenario = async (id) => {
     return await window.eightlabs.getTestScenario(id);
 };
 
+export const createNewTestScenario = async () => {
+
+    return await window.eightlabs.createNewTestScenario();
+};
+
 export const saveTestScenario = async (scenario) => {
 
     return await window.eightlabs.saveTestScenario(scenario);

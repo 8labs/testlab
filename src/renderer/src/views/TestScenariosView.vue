@@ -180,6 +180,7 @@ import {
 import {
   getAllTestScenarios,
   getTestScenario,
+  createNewTestScenario,
   saveTestScenario,
   updateTestScenarioMetadata,
 } from "../services/dataService";
@@ -324,60 +325,31 @@ const loadTestScenario = async () => {
   tableId.value = route.params["id"];
   testResults.value = [];
 
-  if (tableId.value === "new") {
-    let newTable = {
-      name: "New Test Scenario " + new Date().toISOString(),
-      endpoint: "",
-      method: "POST",
-      testTable: {
-        headers: [{ key: "new_header", value: "" }],
-        inputColumns: [
-          { key: "new_input", label: "New Input", expression: "" },
-        ],
-        resultColumns: [
-          {
-            key: "new_expected_result",
-            label: "New Expected Result",
-            expression: "",
-          },
-        ],
-        rows: [{ inputItems: [{ value: "" }], resultItems: [{ value: "" }] }],
-      },
-    };
+  const id = tableId.value !== "new" ? tableId.value : null;
 
-    try {
-      const saved = await saveTestScenario(newTable);
-      scenarioTable.value = saved;
-      emit("namechanged", scenarioTable.value.name);
-      router
-        .push({ name: "TestScenarios", params: { id: saved.id } })
-        .then(() => {
-          // router.go(0)
-        });
-    } catch (error) {
-      console.error("Error creating new scenario:", error);
-    }
-  } else if (tableId.value && tableId.value !== "new") {
-    try {
-      const scenario = await getTestScenario(tableId.value);
-      if (scenario) {
-        scenarioTable.value = scenario;
-        if (!scenarioTable.value.testTable.authentication) {
-          scenarioTable.value.testTable.authentication = {};
-        }
-
-        if (
-          !scenarioTable.value.testTable.headers ||
-          scenarioTable.value.testTable.headers.length == 0
-        ) {
-          scenarioTable.value.testTable.headers = [
-            { key: "new_header", value: "" },
-          ];
-        }
+  try {
+    let scenario = await getTestScenario(id);
+    if (scenario) {
+      if (tableId.value === "new") {
+        scenario = await createNewTestScenario();
+        router.push({ name: "TestScenarios", params: { id: scenario.id } });
       }
-    } catch (error) {
-      console.error("Error loading scenario:", error);
+      scenarioTable.value = scenario;
+      if (!scenarioTable.value.testTable.authentication) {
+        scenarioTable.value.testTable.authentication = {};
+      }
+
+      if (
+        !scenarioTable.value.testTable.headers ||
+        scenarioTable.value.testTable.headers.length == 0
+      ) {
+        scenarioTable.value.testTable.headers = [
+          { key: "new_header", value: "" },
+        ];
+      }
     }
+  } catch (error) {
+    console.error("Error loading scenario:", error);
   }
 };
 

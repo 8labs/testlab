@@ -6,6 +6,12 @@ class DataService {
     constructor() {
         this.dataDir = app.getPath('userData') + '/' + 'test-scenarios';
         this.firstRunFlagFile = app.getPath('userData') + '/' + '.first-run-flag';
+
+        this.resourcePath = process.env.NODE_ENV === 'development'
+            ? path.join(__dirname, '../../resources')
+            : process.resourcesPath;
+        this.demoScenarioPath = path.join(this.resourcePath, 'demoscenario.json');
+        this.newScenarioPath = path.join(this.resourcePath, 'newscenario.json');
     }
 
     async initialize() {
@@ -35,196 +41,9 @@ class DataService {
 
     async insertDemoScenario() {
         try {
-            const demoScenario = {
-                "name": "Demo Scenario",
-                "endpoint": "https://files.8labs.com/test.php?static_param=staticvalue&dynamic_param={{dynamicValue}}",
-                "method": "POST",
-                "testTable": {
-                    "inputColumns": [
-                        {
-                            "key": "dynamic_query_value",
-                            "label": "Dynamic Query Value",
-                            "expression": "dynamicValue",
-                            "editVisible": false
-                        },
-                        {
-                            "label": "Multiplier",
-                            "expression": "$.math_variables.multiplier",
-                            "editVisible": false,
-                            "key": "multiplier"
-                        },
-                        {
-                            "label": "Name",
-                            "expression": "$.name",
-                            "editVisible": false,
-                            "key": "name"
-                        },
-                        {
-                            "label": "Age",
-                            "expression": "$.age",
-                            "editVisible": false,
-                            "key": "age"
-                        }
-                    ],
-                    "resultColumns": [
-                        {
-                            "key": "multiplied",
-                            "label": "Multiplied",
-                            "expression": "$.math.multiplied",
-                            "editVisible": false
-                        },
-                        {
-                            "label": "Name",
-                            "expression": "$.person.name",
-                            "editVisible": false,
-                            "key": "name"
-                        },
-                        {
-                            "label": "Status Code",
-                            "expression": "{{http_status}}",
-                            "editVisible": false,
-                            "key": "status_code"
-                        }
-                    ],
-                    "rows": [
-                        {
-                            "inputItems": [
-                                {
-                                    "value": "value1"
-                                },
-                                {
-                                    "value": "10"
-                                },
-                                {
-                                    "value": "John"
-                                },
-                                {
-                                    "value": "30"
-                                }
-                            ],
-                            "resultItems": [
-                                {
-                                    "value": "100",
-                                    "operator": "="
-                                },
-                                {
-                                    "value": "John",
-                                    "operator": "="
-                                },
-                                {
-                                    "value": "200",
-                                    "operator": "="
-                                }
-                            ]
-                        },
-                        {
-                            "inputItems": [
-                                {
-                                    "value": "value2"
-                                },
-                                {
-                                    "value": "20"
-                                },
-                                {
-                                    "value": "John"
-                                },
-                                {
-                                    "value": "30"
-                                }
-                            ],
-                            "resultItems": [
-                                {
-                                    "value": "200",
-                                    "operator": "="
-                                },
-                                {
-                                    "value": "John",
-                                    "operator": "="
-                                },
-                                {
-                                    "value": "404",
-                                    "operator": "!="
-                                }
-                            ]
-                        },
-                        {
-                            "inputItems": [
-                                {
-                                    "value": "value3"
-                                },
-                                {
-                                    "value": "-20"
-                                },
-                                {
-                                    "value": "John"
-                                },
-                                {
-                                    "value": "30"
-                                }
-                            ],
-                            "resultItems": [
-                                {
-                                    "value": "0",
-                                    "operator": "<"
-                                },
-                                {
-                                    "value": "John",
-                                    "operator": "="
-                                },
-                                {
-                                    "value": "200",
-                                    "operator": "="
-                                }
-                            ]
-                        }, {
-                            "inputItems": [
-                                {
-                                    "value": "value3"
-                                },
-                                {
-                                    "value": "2"
-                                },
-                                {
-                                    "value": "John"
-                                },
-                                {
-                                    "value": "30"
-                                }
-                            ],
-                            "resultItems": [
-                                {
-                                    "value": "2000",
-                                    "operator": "="
-                                },
-                                {
-                                    "value": "John",
-                                    "operator": "="
-                                },
-                                {
-                                    "value": "200",
-                                    "operator": "="
-                                }
-                            ]
-                        }
-                    ],
-                    "authentication": {
-                        "type": "Basic",
-                        "username": "AUsername",
-                        "password": "aPassword!"
-                    },
-                    "headers": [
-                        {
-                            "key": "static_header",
-                            "value": "static_value1"
-                        },
-                        {
-                            "key": "dynamic_header",
-                            "value": "{{dynamicValue}}"
-                        }
-                    ]
-                },
-                "id": "9b0c23eb-33ff-4e50-9f3e-59c65eee580a"
-            };
+            // Read the demo scenario from the resources
+            const demoContent = await fs.readFile(this.demoScenarioPath, 'utf-8');
+            const demoScenario = JSON.parse(demoContent);
 
             // Ensure the demo scenario has a unique ID
             demoScenario.id = crypto.randomUUID();
@@ -266,8 +85,24 @@ class DataService {
         }
     }
 
+    async createNewTestScenario() {
+        const newContent = await fs.readFile(this.newScenarioPath, 'utf-8');
+        const newScenario = JSON.parse(newContent);
+        newScenario.name = "New Test Scenario " + new Date().toISOString();
+        const scenario = await this.saveTestScenario(newScenario);
+        return scenario;
+    }
+
     async getTestScenario(id) {
         try {
+            // If id is null, return a new scenario template
+            if (id === null) {
+                const newContent = await fs.readFile(this.newScenarioPath, 'utf-8');
+                const newScenario = JSON.parse(newContent);
+                newScenario.name = "New Test Scenario " + new Date().toISOString();
+                return newScenario;
+            }
+
             const filePath = this.dataDir + '/' + `${id}.json`;
             const content = await fs.readFile(filePath, 'utf-8');
             return JSON.parse(content);
