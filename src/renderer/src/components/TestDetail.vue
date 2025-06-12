@@ -5,6 +5,10 @@
     </div>
     <h3>HTTP Status</h3>
     <p>{{ selectedTest.test.httpStatus }}</p>
+    <h3 v-if="!!selectedTest.test.followupResult">Followup Status</h3>
+    <p v-if="!!selectedTest.test.followupResult">
+      {{ selectedTest.test.followupResult.httpStatus }}
+    </p>
     <h3>Items</h3>
     <table>
       <thead>
@@ -55,6 +59,25 @@
         theme="dark"
         :showSelectController="false"
         :data="selectedTest.test.jsonContent"
+      />
+    </div>
+
+    <h3>Followup Response Content</h3>
+    <div
+      class="json-content"
+      v-if="
+        !!selectedTest &&
+        !!selectedTest.test &&
+        !!selectedTest.test.followupResult &&
+        !!selectedTest.test.followupResult.jsonContent
+      "
+    >
+      <vue-json-pretty
+        :highlightSelectedNode="false"
+        :showLine="false"
+        theme="dark"
+        :showSelectController="false"
+        :data="selectedTest.test.followupResult.jsonContent"
       />
     </div>
   </div>
@@ -108,15 +131,25 @@ const getPropertyValue = (index) => {
 
   const expression =
     props.selectedTest.testTable.resultColumns[index].expression;
-  if (!expression.startsWith("$.")) {
+  if (!expression.startsWith("$.") && !expression.startsWith("%.")) {
     return "";
   }
 
-  // Remove the leading '$.' and split the path
+  // Determine which response to use based on the binding prefix
+  const isFollowup = expression.startsWith("%.");
+  const responseContent = isFollowup
+    ? props.selectedTest?.test?.followupResult?.jsonContent
+    : props.selectedTest?.test?.jsonContent;
+
+  if (!responseContent) {
+    return "";
+  }
+
+  // Remove the leading '$.' or '%.' and split the path
   const json_path = expression.substring(2).split(".");
 
   // Start from the root object
-  let current = props.selectedTest.test.jsonContent;
+  let current = responseContent;
 
   // Traverse the path
   for (const key of json_path) {

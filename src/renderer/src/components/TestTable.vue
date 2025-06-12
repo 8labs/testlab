@@ -479,19 +479,22 @@ const isCellSelected = (rowIndex, colIndex, isInput) => {
 // Keyboard event listeners
 onMounted(() => {
   window.addEventListener("keydown", (event) => {
-    if ((event.ctrlKey || event.metaKey) && event.key === "c") {
-      const clipboardData = handleCopy(selectedCells.value, props.testTable);
-      if (clipboardData) {
-        clipboard.value = clipboardData;
+    // Only handle copy/paste if cells are selected or table is focused
+    if (event.target.closest(".decisionable-table")) {
+      if ((event.ctrlKey || event.metaKey) && event.key === "c") {
+        const clipboardData = handleCopy(selectedCells.value, props.testTable);
+        if (clipboardData) {
+          clipboard.value = clipboardData;
+        }
+      } else if ((event.ctrlKey || event.metaKey) && event.key === "v") {
+        event.preventDefault();
+        handlePaste(
+          selectedCells.value,
+          props.testTable,
+          clipboard.value,
+          updateData
+        );
       }
-    } else if ((event.ctrlKey || event.metaKey) && event.key === "v") {
-      event.preventDefault();
-      handlePaste(
-        selectedCells.value,
-        props.testTable,
-        clipboard.value,
-        updateData
-      );
     }
   });
 });

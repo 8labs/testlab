@@ -33,6 +33,50 @@
         <img src="../assets/img/playwhite.svg" /> <span>Run All Tests</span>
       </button>
     </div>
+    <div
+      class="followup-bar"
+      v-if="
+        !scenarioTable.followup_endpoint &&
+        scenarioTable.followup_endpoint != ''
+      "
+    >
+      <a @click="addFollowup()">Add a followup endpoint</a>
+    </div>
+    <div
+      class="address-bar"
+      v-if="
+        !!scenarioTable.followup_endpoint ||
+        scenarioTable.followup_endpoint == ''
+      "
+    >
+      <select
+        v-model="scenarioTable.followup_method"
+        @change="updateMetadata()"
+      >
+        <option value="POST">POST</option>
+        <option value="GET">GET</option>
+        <option value="PUT">PUT</option>
+        <option value="PATCH">PATCH</option>
+        <option value="DELETE">DELETE</option>
+      </select>
+      <input
+        type="text"
+        class="address-bar-input"
+        v-model="scenarioTable.followup_endpoint"
+        @blur="updateMetadata()"
+        placeholder="Followup Endpoint"
+      />
+      <div class="followup-bar-options">
+        <span>Delay</span>
+        <input type="number" v-model="scenarioTable.followup_wait_time" />
+        <select v-model="scenarioTable.followup_wait_time_unit">
+          <option value="ms">ms</option>
+          <option value="s">s</option>
+        </select>
+      </div>
+
+      <button @click="removeFollowup()">x</button>
+    </div>
     <div class="tab-bar">
       <button
         @click="tabView = 'table'"
@@ -220,6 +264,17 @@ const addHeaderRow = async () => {
   });
 };
 
+const addFollowup = () => {
+  scenarioTable.value.followup_endpoint = "";
+  scenarioTable.value.followup_method = "POST";
+  scenarioTable.value.followup_wait_time = 1000;
+  scenarioTable.value.followup_wait_time_unit = "ms";
+};
+
+const removeFollowup = () => {
+  scenarioTable.value.followup_endpoint = null;
+};
+
 // Update metadata (name and endpoint)
 const updateMetadata = async () => {
   try {
@@ -227,6 +282,8 @@ const updateMetadata = async () => {
       name: scenarioTable.value.name,
       endpoint: scenarioTable.value.endpoint,
       method: scenarioTable.value.method,
+      followup_endpoint: scenarioTable.value.followup_endpoint,
+      followup_method: scenarioTable.value.followup_method,
     });
     emit("namechanged", scenarioTable.value.name);
   } catch (error) {
@@ -438,9 +495,12 @@ onMounted(async () => {
   border: none;
   background-color: #001d27;
   color: #ffffff;
-  flex-grow: 1;
   padding: 0.5rem 1rem;
   font-size: 0.85rem;
+}
+
+.address-bar input[type="text"] {
+  flex-grow: 1;
 }
 
 .address-bar input::placeholder {
@@ -612,5 +672,30 @@ onMounted(async () => {
 
 .password-toggle:hover img {
   opacity: 1;
+}
+
+.followup-bar {
+  margin-top: -1rem;
+  margin-bottom: 1rem;
+}
+
+.followup-bar a {
+  margin-left: 0.5rem;
+  text-decoration: underline;
+  color: #001d27;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.followup-bar-options span {
+  font-size: 0.85rem;
+}
+
+.followup-bar-options input {
+  width: 5rem;
+}
+
+.followup-bar-options select {
+  width: 4rem;
 }
 </style>
