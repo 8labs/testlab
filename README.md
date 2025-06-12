@@ -137,6 +137,30 @@ For validating responses, you can use:
    - `contain` (string contains) (not yet implemented in the ui)
    - `notcontain` (string does not contain) (not yet implemented in the ui)
 
+### Follow-up Queries
+
+Testlab supports follow-up queries that can use data from the first query's response. This is perfect for scenarios like:
+- Creating a resource and then verifying it exists
+- Updating data and then checking the changes
+- Chaining multiple API calls together
+
+#### Setting Up Follow-up Queries
+
+1. **Configure Follow-up Endpoint**:
+   - Set the follow-up endpoint URL
+   - Choose the HTTP method (defaults to POST)
+   - Set optional wait time between queries
+
+2. **Input Mapping**:
+   - Use `%` prefix in input column expressions to indicate follow-up body content
+   - Map values from first response using `$.` syntax
+   - Example: `%.userId` with value `$.id` will use the `id` from the first response
+
+3. **Response Validation**:
+   - Use `%.` prefix in result column expressions to validate follow-up response
+   - Example: `%.name` validates the `name` field in the follow-up response
+
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
