@@ -62,7 +62,16 @@
       />
     </div>
 
-    <h3>Followup Response Content</h3>
+    <h3
+      v-if="
+        !!selectedTest &&
+        !!selectedTest.test &&
+        !!selectedTest.test.followupResult &&
+        !!selectedTest.test.followupResult.jsonContent
+      "
+    >
+      Followup Response Content
+    </h3>
     <div
       class="json-content"
       v-if="
