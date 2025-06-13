@@ -1,6 +1,6 @@
 {
   "name": "8labs",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "8labs is a really simple api testing platform that allows you to build and run tests against your api endpoints as easily as editing a spreadsheet.",
   "author": "8labs",
   "license": "Proprietary",
