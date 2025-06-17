@@ -27,6 +27,9 @@
           {{ selectedTest.testTable.resultColumns[inputItemIndex].expression }}
         </td>
         <td
+          :class="{
+            invalid: selectedTest.test.httpStatus != inputItem.value,
+          }"
           v-if="
             selectedTest.testTable.resultColumns[inputItemIndex].expression
               .replace(' ', '')
@@ -35,10 +38,33 @@
         >
           {{ selectedTest.test.httpStatus }}
         </td>
-        <td v-else-if="isCountExpression(inputItemIndex)">
+        <td
+          :class="{
+            invalid:
+              selectedTest.test.followupResult.httpStatus != inputItem.value,
+          }"
+          v-else-if="
+            selectedTest.testTable.resultColumns[inputItemIndex].expression
+              .replace(' ', '')
+              .toLowerCase() === '{{followup_http_status}}'
+          "
+        >
+          {{ selectedTest.test.followupResult.httpStatus }}
+        </td>
+        <td
+          v-else-if="isCountExpression(inputItemIndex)"
+          :class="{
+            invalid: getCountValue(inputItemIndex) != inputItem.value,
+          }"
+        >
           {{ getCountValue(inputItemIndex) }}
         </td>
-        <td v-else>
+        <td
+          v-else
+          :class="{
+            invalid: getPropertyValue(inputItemIndex) != inputItem.value,
+          }"
+        >
           {{ getPropertyValue(inputItemIndex) }}
         </td>
         <td>{{ inputItem.operator || "=" }}</td>

@@ -95,7 +95,9 @@ class TestExecutor {
                         const key = path[i];
                         if (i === path.length - 1) {
                             // Last part of the path, set the value
-                            current[key] = row.inputItems[index].value;
+                            // Convert to number if it's a numeric string
+                            const value = row.inputItems[index].value;
+                            current[key] = !isNaN(value) && value.trim() !== '' ? Number(value) : value;
                         } else {
                             // Create nested object if it doesn't exist
                             current[key] = current[key] || {};
@@ -167,6 +169,7 @@ class TestExecutor {
                         }
 
                         if (!found || !Array.isArray(current)) {
+                            console.log('6 else ' + jsonPath);
                             match = false;
                             break;
                         }
@@ -178,11 +181,14 @@ class TestExecutor {
                             count: current.length
                         });
                     } else {
+                        console.log('7 else ' + jsonPath);
                         match = false;
                         break;
                     }
                 } else if (col.expression.replace(' ', '').toLowerCase() === '{{http_status}}') {
                     actualValue = httpStatus.toString();
+                } else if (col.expression.replace(' ', '').toLowerCase() === '{{followup_http_status}}') {
+                    continue;
                 } else if (col.expression.startsWith('$.')) {
                     const json_path = col.expression.substring(2).split('.');
                     let current = responseJson;
@@ -202,18 +208,21 @@ class TestExecutor {
                     }
 
                     if (!found) {
+                        console.log('8 else ' + col.expression);
                         match = false;
                         break;
                     }
 
                     actualValue = current.toString();
                 } else {
+                    console.log('9 else ' + col.expression);
                     match = false;
                     break;
                 }
 
                 // Compare values
                 if (!this.compareValues(actualValue, item.value, item.operator)) {
+                    console.log('10 ' + actualValue + ' -> ' + item.value + ' -> ' + item.operator);
                     match = false;
                     break;
                 }
@@ -258,44 +267,41 @@ class TestExecutor {
 
             // Create a map of input values for followup query
             const inputMap = scenario.testTable.inputColumns.reduce((acc, col, index) => {
-                if (col.expression.startsWith('%')) {
-                    // For followup inputs, replace $ bindings with values from first response
-                    let value = row.inputItems[index].value;
-                    if (value.startsWith('$.')) {
-                        const path = value.substring(2).split('.');
-                        let current = firstResponseJson;
-                        let found = true;
+                // For followup inputs, replace $ bindings with values from first response
+                let value = row.inputItems[index].value;
+                if (value.startsWith('%.')) {
+                    const path = value.substring(2).split('.');
+                    let current = firstResponseJson;
+                    let found = true;
 
-                        // Traverse the path in first response
-                        for (const key of path) {
-                            if (typeof current !== 'object' || current === null) {
-                                found = false;
-                                break;
-                            }
-                            current = current[key];
-                            if (current === undefined) {
-                                found = false;
-                                break;
-                            }
+                    // Traverse the path in first response
+                    for (const key of path) {
+                        if (typeof current !== 'object' || current === null) {
+                            found = false;
+                            break;
                         }
-
-                        if (found) {
-                            value = current.toString();
-                        } else {
-                            // If we couldn't find the value, use the original binding
-                            value = `{{${value.substring(2)}}}`;
+                        current = current[key];
+                        if (current === undefined) {
+                            found = false;
+                            break;
                         }
                     }
-                    acc[col.expression] = value;
+
+                    if (found) {
+                        value = current.toString();
+                    } else {
+                        // If we couldn't find the value, use the original binding
+                        value = `{{${value.substring(2)}}}`;
+                    }
                 }
+                acc[col.expression] = value;
                 return acc;
             }, {});
 
 
             // Prepare the endpoint URL
             let endpoint = scenario.followup_endpoint;
-            Object.entries(inputMap)
-                .filter(([key]) => !key.startsWith('$'))
+            Object.entries(inputMap).filter(([key]) => !key.startsWith('$'))
                 .forEach(([key, value]) => {
                     endpoint = endpoint.replace(`{{${key}}}`, value);
                 });
@@ -363,14 +369,16 @@ class TestExecutor {
 
                     if (parts.length === 1) {
                         // For root level properties, set directly
-                        bodyMap[parts[0]] = inputMap[col.expression];
+                        const value = inputMap[col.expression];
+                        bodyMap[parts[0]] = !isNaN(value) && value.trim() !== '' ? Number(value) : value;
                     } else {
                         // For nested properties, create the structure
                         let current = bodyMap;
                         for (let i = 0; i < parts.length; i++) {
                             const key = parts[i];
                             if (i === parts.length - 1) {
-                                current[key] = inputMap[col.expression];
+                                const value = inputMap[col.expression];
+                                current[key] = !isNaN(value) && value.trim() !== '' ? Number(value) : value;
                             } else {
                                 current[key] = current[key] || {};
                                 current = current[key];
@@ -442,6 +450,7 @@ class TestExecutor {
                         }
 
                         if (!found || !Array.isArray(current)) {
+                            console.log('1 ' + jsonPath + ' -> ' + current + ' -> ' + found);
                             match = false;
                             break;
                         }
@@ -453,11 +462,11 @@ class TestExecutor {
                             count: current.length
                         });
                     } else {
-                        console.log('1' + col.expression + ' -> ' + actualValue + ' -> ' + item.value);
+                        console.log('2 else ' + jsonPath);
                         match = false;
                         break;
                     }
-                } else if (col.expression.replace(' ', '').toLowerCase() === '{{http_status}}') {
+                } else if (col.expression.replace(' ', '').toLowerCase() === '{{followup_http_status}}') {
                     actualValue = httpStatus.toString();
                 } else if (col.expression.startsWith('%.')) {
                     const json_path = col.expression.substring(2).split('.');
@@ -478,21 +487,21 @@ class TestExecutor {
                     }
 
                     if (!found) {
-                        console.log('2' + col.expression + ' -> ' + actualValue + ' -> ' + item.value);
+                        console.log('3 ' + col.expression + ' -> ' + actualValue + ' -> ' + item.value);
                         match = false;
                         break;
                     }
 
                     actualValue = current.toString();
                 } else {
-                    console.log('3' + col.expression + ' -> ' + actualValue + ' -> ' + item.value + ' -> ' + JSON.stringify(responseJson));
+                    console.log('4 ' + col.expression + ' -> ' + actualValue + ' -> ' + item.value);
                     match = false;
                     break;
                 }
 
                 // Compare values
                 if (!this.compareValues(actualValue, item.value, item.operator)) {
-                    console.log('4' + col.expression + ' -> ' + actualValue + ' -> ' + item.value);
+                    console.log('5 ' + actualValue + ' -> ' + item.value + ' -> ' + item.operator);
                     match = false;
                     break;
                 }
