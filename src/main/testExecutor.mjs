@@ -1,5 +1,6 @@
 import axios from 'axios';
 import TestHistoryService from './testHistoryService.mjs';
+import { runScript } from '../renderer/src/services/scriptService.js';
 
 class TestExecutor {
     constructor() {
@@ -551,11 +552,42 @@ class TestExecutor {
 
     async executeAllTests(scenario) {
         const results = [];
+        // Run pre-run script if present
+        if (scenario.scripts && scenario.scripts.preRun) {
+            try {
+                await runScript('preRun', scenario.scripts.preRun);
+            } catch (e) {
+                console.error('Pre-run script error:', e);
+            }
+        }
         for (const row of scenario.testTable.rows) {
+            // Run pre-test script if present
+            if (scenario.scripts && scenario.scripts.preTest) {
+                try {
+                    await runScript('preTest', scenario.scripts.preTest);
+                } catch (e) {
+                    console.error('Pre-test script error:', e);
+                }
+            }
             const result = await this.executeTest(scenario, row);
             results.push(result);
+            // Run post-test script if present
+            if (scenario.scripts && scenario.scripts.postTest) {
+                try {
+                    await runScript('postTest', scenario.scripts.postTest);
+                } catch (e) {
+                    console.error('Post-test script error:', e);
+                }
+            }
         }
-
+        // Run post-run script if present
+        if (scenario.scripts && scenario.scripts.postRun) {
+            try {
+                await runScript('postRun', scenario.scripts.postRun);
+            } catch (e) {
+                console.error('Post-run script error:', e);
+            }
+        }
         return results;
     }
 }

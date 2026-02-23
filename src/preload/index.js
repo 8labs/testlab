@@ -39,6 +39,9 @@ if (process.contextIsolated) {
 
         // Analytics operations
         trackEvent: (eventType, details) => ipcRenderer.invoke('track-event', eventType, details),
+
+        // Script execution
+        runScript: (type, script) => ipcRenderer.invoke('run-script', type, script),
       }
     );
   } catch (error) {

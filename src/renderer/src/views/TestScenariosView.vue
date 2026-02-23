@@ -93,6 +93,12 @@
       <button @click="tabView = 'auth'" :class="{ active: tabView == 'auth' }">
         Authentication
       </button>
+      <button
+        @click="tabView = 'scripts'"
+        :class="{ active: tabView == 'scripts' }"
+      >
+        Scripts
+      </button>
     </div>
     <div class="headers" v-if="tabView == 'headers'">
       <table>
@@ -188,6 +194,40 @@
             placeholder="Bearer token or {{variable}}"
           />
         </div>
+      </div>
+    </div>
+    <div class="scripts" v-if="tabView == 'scripts'">
+      <div>
+        <h3>Pre-run Script</h3>
+        <textarea
+          v-model="scenarioTable.scripts.preRun"
+          @change="saveScenario()"
+          placeholder="Shell script to run before all tests"
+        ></textarea>
+      </div>
+      <div>
+        <h3>Pre-test Script</h3>
+        <textarea
+          v-model="scenarioTable.scripts.preTest"
+          @change="saveScenario()"
+          placeholder="Shell script to run before each test row"
+        ></textarea>
+      </div>
+      <div>
+        <h3>Post-test Script</h3>
+        <textarea
+          v-model="scenarioTable.scripts.postTest"
+          @change="saveScenario()"
+          placeholder="Shell script to run after each test row"
+        ></textarea>
+      </div>
+      <div>
+        <h3>Post-run Script</h3>
+        <textarea
+          v-model="scenarioTable.scripts.postRun"
+          @change="saveScenario()"
+          placeholder="Shell script to run after all tests"
+        ></textarea>
       </div>
     </div>
     <TestTable
@@ -403,6 +443,25 @@ const loadTestScenario = async () => {
         scenarioTable.value.testTable.headers = [
           { key: "new_header", value: "" },
         ];
+      }
+
+      // Ensure scripts object and fields are always present
+      if (!scenarioTable.value.scripts) {
+        scenarioTable.value.scripts = {
+          preRun: "",
+          preTest: "",
+          postTest: "",
+          postRun: "",
+        };
+      } else {
+        scenarioTable.value.scripts.preRun =
+          scenarioTable.value.scripts.preRun || "";
+        scenarioTable.value.scripts.preTest =
+          scenarioTable.value.scripts.preTest || "";
+        scenarioTable.value.scripts.postTest =
+          scenarioTable.value.scripts.postTest || "";
+        scenarioTable.value.scripts.postRun =
+          scenarioTable.value.scripts.postRun || "";
       }
     }
   } catch (error) {
@@ -697,5 +756,29 @@ onMounted(async () => {
 
 .followup-bar-options select {
   width: 4rem;
+}
+
+.scripts {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  gap: 1rem;
+}
+
+.scripts > div {
+  width: calc(50% - 1rem);
+}
+
+.scripts textarea {
+  width: 100%;
+  height: 10rem;
+  padding: 0.5rem;
+  border: 1px solid #001d27;
+  font-size: 1rem;
+}
+
+.scripts textarea:focus {
+  outline: none;
+  border-color: #001d27;
 }
 </style>

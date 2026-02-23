@@ -2,6 +2,8 @@ import { app, shell, BrowserWindow, ipcMain, Menu } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.icns?asset'
+import { exec } from 'child_process'
+import os from 'os'
 
 import TestExecutor from './testExecutor.mjs';
 import DataService from './dataService.mjs';
@@ -143,6 +145,29 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('track-event', async (event, eventType, details) => {
     await analyticsService.trackEvent(eventType, details);
+  });
+
+  ipcMain.handle('run-script', async (event, type, script) => {
+    return new Promise((resolve, reject) => {
+      if (!script || typeof script !== 'string') {
+        return resolve({ error: 'No script provided' });
+      }
+      let shell;
+      if (os.platform() === 'win32') {
+        shell = 'powershell.exe';
+      } else if (os.platform() === 'darwin') {
+        shell = '/bin/zsh';
+      } else {
+        shell = '/bin/bash';
+      }
+      exec(script, { shell }, (error, stdout, stderr) => {
+        if (error) {
+          resolve({ error: error.message, stdout, stderr });
+        } else {
+          resolve({ stdout, stderr });
+        }
+      });
+    });
   });
 
   createWindow()
